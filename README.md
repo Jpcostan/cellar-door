@@ -236,3 +236,9 @@ npm publish
 ## License
 
 MIT
+
+## Docs & Community
+
+- `CHANGELOG.md`
+- `CONTRIBUTING.md`
+- `docs/recipes/`
