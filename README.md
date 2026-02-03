@@ -201,6 +201,19 @@ npm run build
 npm run smoke
 ```
 
+## Benchmarks
+
+```bash
+npm run bench:retrieval
+npm run bench:tokens
+```
+
+## Security Checklist
+
+```bash
+npm run security:check
+```
+
 ## Publishing (npm)
 
 This repo is configured for a public npm package with a `files` whitelist. Publishing runs tests and build automatically:
