@@ -3,7 +3,7 @@ import type { ToolCall, ToolDefinition, ToolResult } from "../protocol/types.js"
 import type { ToolRegistry } from "./registry.js";
 import type { ApprovalProvider } from "./approvals.js";
 import { evaluateToolPolicy } from "./policy.js";
-import { appendAudit } from "../audit/log.js";
+import { appendAudit, resolveActor } from "../audit/log.js";
 
 export interface ToolContext {
   config: Config | null;
@@ -37,7 +37,7 @@ export async function executeToolCall(call: ToolCall, context: ToolContext): Pro
     await appendAudit({
       ts: new Date().toISOString(),
       type: "approval",
-      actor: "user",
+      actor: resolveActor(context.config ?? null, "user"),
       message: approved ? "Approval granted" : "Approval denied",
       data: { tool: tool.name, id: call.id },
     });

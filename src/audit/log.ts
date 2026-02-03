@@ -9,6 +9,10 @@ export interface AuditRecord {
   data?: Record<string, unknown>;
 }
 
+export function resolveActor(config: { userIdentity?: string | undefined } | null, fallback: string): string {
+  return config?.userIdentity ?? fallback;
+}
+
 export async function appendAudit(record: AuditRecord): Promise<void> {
   await fs.mkdir(getAuditDir(), { recursive: true, mode: 0o700 });
   const line = JSON.stringify(record);

@@ -97,6 +97,7 @@ cellar-door doctor
 | `cellar-door policy check|explain|approve` | Inspect and reason about policy decisions |
 | `cellar-door audit tail` | View recent audit log entries |
 | `cellar-door plugin add|remove|list|verify|template` | Manage plugins and scaffold new ones |
+| `cellar-door team init|join|sync` | Configure shared team directory |
 
 > Additional commands (`policy`, `tool`, `plugin`) are planned for Phase 4+.
 

@@ -12,6 +12,12 @@ export const ConfigSchema = z.object({
   version: z.literal(1),
   modelProvider: ModelProviderSchema.nullable(),
   approvedModelProviders: z.array(z.string()).optional(),
+  userIdentity: z.string().optional(),
+  team: z
+    .object({
+      name: z.string().optional(),
+    })
+    .optional(),
   workspaceRoot: z.string().optional(),
   network: z
     .object({
@@ -52,6 +58,8 @@ export const DEFAULT_CONFIG: Config = {
   version: 1,
   modelProvider: null,
   approvedModelProviders: undefined,
+  userIdentity: undefined,
+  team: undefined,
   workspaceRoot: undefined,
   network: undefined,
   tools: undefined,

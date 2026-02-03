@@ -11,7 +11,7 @@ import { CliApprovalProvider } from "../tools/approvals.js";
 import { executeToolCall, ToolContext } from "../tools/executor.js";
 import { BUILTIN_HANDLERS } from "../tools/builtins.js";
 import type { Config } from "../config/schema.js";
-import { appendAudit } from "../audit/log.js";
+import { appendAudit, resolveActor } from "../audit/log.js";
 import { isModelAllowed } from "../policy/engine.js";
 
 export interface RunOptions {
@@ -82,7 +82,7 @@ export async function runTask(task: string, options: RunOptions): Promise<RunOut
     await appendAudit({
       ts: new Date().toISOString(),
       type: "policy",
-      actor: "runtime",
+      actor: resolveActor(options.config ?? null, "runtime"),
       message: modelPolicy.reason,
       data: { provider: options.modelProvider.kind },
     });
@@ -105,7 +105,7 @@ export async function runTask(task: string, options: RunOptions): Promise<RunOut
   await appendAudit({
     ts: new Date().toISOString(),
     type: "model",
-    actor: "runtime",
+    actor: resolveActor(options.config ?? null, "runtime"),
     message: "Model invocation",
     data: { provider: options.modelProvider.kind, model: options.modelProvider.model, traceId },
   });
@@ -133,7 +133,7 @@ export async function runTask(task: string, options: RunOptions): Promise<RunOut
     await appendAudit({
       ts: new Date().toISOString(),
       type: "tool",
-      actor: "runtime",
+      actor: resolveActor(options.config ?? null, "runtime"),
       message: `Tool ${call.name} ${result.status}`,
       data: { id: call.id, name: call.name, status: result.status },
     });

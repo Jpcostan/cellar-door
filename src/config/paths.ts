@@ -1,3 +1,4 @@
+import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 
@@ -8,7 +9,17 @@ export function getHomeDir(): string {
   if (override && override.trim().length > 0) {
     return override;
   }
-  return path.join(os.homedir(), ".cellar-door");
+  const defaultHome = path.join(os.homedir(), ".cellar-door");
+  const pointerPath = path.join(defaultHome, "team-root");
+  try {
+    const sharedRoot = fs.readFileSync(pointerPath, "utf-8").trim();
+    if (sharedRoot.length > 0) {
+      return sharedRoot;
+    }
+  } catch {
+    // ignore missing pointer
+  }
+  return defaultHome;
 }
 
 export function getConfigPath(): string {

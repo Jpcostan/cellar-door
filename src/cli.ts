@@ -13,6 +13,7 @@ import { runToolDescribe, runToolList } from "./commands/tool.js";
 import { runPolicyCheck, runPolicyExplain, runPolicyApprove, runPolicyCheckDomain, runPolicyCheckPath, runPolicyCheckUi, runPolicyCheckModel } from "./commands/policy.js";
 import { runAuditTail } from "./commands/audit.js";
 import { runPluginAdd, runPluginList, runPluginRemove, runPluginTemplate, runPluginVerify } from "./commands/plugin.js";
+import { runTeamInit, runTeamJoin, runTeamSync } from "./commands/team.js";
 
 const program = new Command();
 
@@ -279,6 +280,35 @@ plugin
   .action(async (dir: string, name: string) => {
     const logger = createLogger({ json: program.opts().json as boolean });
     await runPluginTemplate(dir, name, logger);
+  });
+
+const team = program.command("team").description("Team mode commands");
+
+team
+  .command("init")
+  .description("Initialize a shared team directory")
+  .argument("<path>", "Shared directory path")
+  .argument("<name>", "Team name")
+  .action(async (dir: string, name: string) => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    await runTeamInit(dir, name, logger);
+  });
+
+team
+  .command("join")
+  .description("Join a team shared directory")
+  .argument("<path>", "Shared directory path")
+  .action(async (dir: string) => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    await runTeamJoin(dir, logger);
+  });
+
+team
+  .command("sync")
+  .description("Sync with shared team directory")
+  .action(async () => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    await runTeamSync(logger);
   });
 
 program.parseAsync(process.argv).catch((error) => {
