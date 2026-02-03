@@ -58,6 +58,20 @@ export function isUiAllowed(config: Config | null): PolicyResult {
   return { allowed: true, reason: "UI control allowed by policy." };
 }
 
+export function isDesktopAllowed(config: Config | null): PolicyResult {
+  if (config?.policy?.allowDesktop === false) {
+    return { allowed: false, reason: "Desktop control denied by policy." };
+  }
+  return { allowed: true, reason: "Desktop control allowed by policy." };
+}
+
+export function isHeadlessAllowed(config: Config | null): PolicyResult {
+  if (config?.policy?.allowHeadless === false) {
+    return { allowed: false, reason: "Headless browser denied by policy." };
+  }
+  return { allowed: true, reason: "Headless browser allowed by policy." };
+}
+
 export function isModelAllowed(providerKind: string, config: Config | null): PolicyResult {
   const approved = config?.approvedModelProviders ?? [];
   if (approved.length === 0) {

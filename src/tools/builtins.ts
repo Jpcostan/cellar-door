@@ -250,6 +250,62 @@ const browserScreenshot: ToolDefinition = {
   outputSchema: { type: "object", properties: { path: { type: "string" } }, required: ["path"], additionalProperties: false },
 };
 
+const desktopScreenshot: ToolDefinition = {
+  name: "desktop.screenshot",
+  description: "Capture a desktop screenshot (foreground only, OS-specific)",
+  sideEffectClass: "screen_capture",
+  requiredScopes: [],
+  inputSchema: {
+    type: "object",
+    properties: { path: { type: "string" } },
+    required: ["path"],
+    additionalProperties: false,
+  },
+  outputSchema: { type: "object", properties: { path: { type: "string" } }, required: ["path"], additionalProperties: false },
+};
+
+const desktopKeypress: ToolDefinition = {
+  name: "desktop.keypress",
+  description: "Send a keypress to the foreground app",
+  sideEffectClass: "ui_control",
+  requiredScopes: [],
+  inputSchema: {
+    type: "object",
+    properties: { key: { type: "string" } },
+    required: ["key"],
+    additionalProperties: false,
+  },
+  outputSchema: { type: "object", properties: { key: { type: "string" } }, required: ["key"], additionalProperties: false },
+};
+
+const desktopMouse: ToolDefinition = {
+  name: "desktop.mouse",
+  description: "Move mouse to x/y (foreground only)",
+  sideEffectClass: "ui_control",
+  requiredScopes: [],
+  inputSchema: {
+    type: "object",
+    properties: { x: { type: "number" }, y: { type: "number" } },
+    required: ["x", "y"],
+    additionalProperties: false,
+  },
+  outputSchema: { type: "object", properties: { x: { type: "number" }, y: { type: "number" } }, required: ["x", "y"], additionalProperties: false },
+};
+
+const desktopFocus: ToolDefinition = {
+  name: "desktop.focusWindow",
+  description: "Focus an app window by name (foreground only)",
+  sideEffectClass: "ui_control",
+  requiredScopes: [],
+  inputSchema: {
+    type: "object",
+    properties: { app: { type: "string" } },
+    required: ["app"],
+    additionalProperties: false,
+  },
+  outputSchema: { type: "object", properties: { app: { type: "string" } }, required: ["app"], additionalProperties: false },
+};
+
 export const BUILTIN_TOOLS: ToolDefinition[] = [
   fsRead,
   fsWrite,
@@ -263,6 +319,10 @@ export const BUILTIN_TOOLS: ToolDefinition[] = [
   browserClick,
   browserType,
   browserScreenshot,
+  desktopScreenshot,
+  desktopKeypress,
+  desktopMouse,
+  desktopFocus,
 ];
 
 class BrowserSession {
@@ -418,6 +478,51 @@ export const BUILTIN_HANDLERS: Map<string, ToolHandler> = new Map([
       const target = ensureWithinWorkspace(String(args.path), workspace);
       await page.screenshot({ path: target });
       return { path: target };
+    },
+  }],
+  [desktopScreenshot.name, {
+    definition: desktopScreenshot,
+    execute: async (args, config) => {
+      const target = ensureWithinWorkspace(String(args.path), resolveWorkspace(config));
+      if (process.platform === "darwin") {
+        await execFileAsync("screencapture", ["-x", target]);
+        return { path: target };
+      }
+      throw new Error("desktop.screenshot is only implemented on macOS.");
+    },
+  }],
+  [desktopKeypress.name, {
+    definition: desktopKeypress,
+    execute: async (args) => {
+      if (process.platform === "darwin") {
+        const key = String(args.key);
+        await execFileAsync("osascript", ["-e", `tell application "System Events" to keystroke ${JSON.stringify(key)}`]);
+        return { key };
+      }
+      throw new Error("desktop.keypress is only implemented on macOS.");
+    },
+  }],
+  [desktopMouse.name, {
+    definition: desktopMouse,
+    execute: async (args) => {
+      if (process.platform === "darwin") {
+        const x = Number(args.x);
+        const y = Number(args.y);
+        await execFileAsync("osascript", ["-e", `tell application "System Events" to set position of mouse to {${x}, ${y}}`]);
+        return { x, y };
+      }
+      throw new Error("desktop.mouse is only implemented on macOS.");
+    },
+  }],
+  [desktopFocus.name, {
+    definition: desktopFocus,
+    execute: async (args) => {
+      if (process.platform === "darwin") {
+        const app = String(args.app);
+        await execFileAsync("osascript", ["-e", `tell application ${JSON.stringify(app)} to activate`]);
+        return { app };
+      }
+      throw new Error("desktop.focusWindow is only implemented on macOS.");
     },
   }],
 ]);

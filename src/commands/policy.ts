@@ -2,6 +2,7 @@ import type { Logger } from "../logging/logger.js";
 import type { Config } from "../config/schema.js";
 import type { ToolDefinition } from "../protocol/types.js";
 import { isToolAllowed, isPathAllowed, isDomainAllowed, isUiAllowed, isModelAllowed } from "../policy/engine.js";
+import { grantApproval } from "../policy/approvals.js";
 
 export async function runPolicyCheck(tool: ToolDefinition, config: Config | null, logger: Logger): Promise<void> {
   const result = isToolAllowed(tool, config);
@@ -12,8 +13,9 @@ export async function runPolicyExplain(config: Config | null, logger: Logger): P
   logger.info("Policy", { policy: config?.policy ?? {} });
 }
 
-export async function runPolicyApprove(toolName: string, config: Config | null, logger: Logger): Promise<void> {
-  logger.info("Policy approval recorded.", { tool: toolName, approved: true, note: "Manual approvals are currently session-only." });
+export async function runPolicyApprove(toolName: string, ttlSeconds: number, logger: Logger): Promise<void> {
+  await grantApproval(toolName, ttlSeconds);
+  logger.info("Policy approval recorded.", { tool: toolName, ttlSeconds });
 }
 
 export async function runPolicyCheckPath(pathValue: string, config: Config | null, logger: Logger): Promise<void> {

@@ -177,12 +177,12 @@ policy
 
 policy
   .command("approve")
-  .description("Record a manual approval (session-only)")
+  .description("Record a manual approval (time-bounded)")
   .argument("<name>", "Tool name")
-  .action(async (name: string) => {
+  .option("--ttl <seconds>", "Approval TTL in seconds", (value) => Number.parseInt(value, 10), 300)
+  .action(async (name: string, options: { ttl: number }) => {
     const logger = createLogger({ json: program.opts().json as boolean });
-    const config = await loadConfig();
-    await runPolicyApprove(name, config, logger);
+    await runPolicyApprove(name, options.ttl, logger);
   });
 
 policy

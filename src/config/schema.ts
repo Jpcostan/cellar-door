@@ -1,12 +1,28 @@
 import { z } from "zod";
 
-export const ModelProviderSchema = z.object({
+export const HttpProviderSchema = z.object({
   kind: z.literal("http"),
   baseUrl: z.string().url(),
   model: z.string().min(1),
   headers: z.record(z.string()).optional(),
   timeoutMs: z.number().int().positive().optional(),
 });
+
+export const OllamaProviderSchema = z.object({
+  kind: z.literal("ollama"),
+  baseUrl: z.string().url().optional(),
+  model: z.string().min(1),
+  timeoutMs: z.number().int().positive().optional(),
+});
+
+export const LmStudioProviderSchema = z.object({
+  kind: z.literal("lmstudio"),
+  baseUrl: z.string().url().optional(),
+  model: z.string().min(1),
+  timeoutMs: z.number().int().positive().optional(),
+});
+
+export const ModelProviderSchema = z.union([HttpProviderSchema, OllamaProviderSchema, LmStudioProviderSchema]);
 
 export const ConfigSchema = z.object({
   version: z.literal(1),
@@ -29,6 +45,7 @@ export const ConfigSchema = z.object({
       execEnabled: z.boolean().optional(),
       browserEnabled: z.boolean().optional(),
       browserHeadless: z.boolean().optional(),
+      desktopEnabled: z.boolean().optional(),
     })
     .optional(),
   policy: z
@@ -40,6 +57,8 @@ export const ConfigSchema = z.object({
       allowDomains: z.array(z.string()).optional(),
       denyDomains: z.array(z.string()).optional(),
       allowUi: z.boolean().optional(),
+      allowDesktop: z.boolean().optional(),
+      allowHeadless: z.boolean().optional(),
     })
     .optional(),
   tokenBudgets: z

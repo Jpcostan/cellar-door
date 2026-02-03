@@ -3,7 +3,8 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { ENV_HOME, getBootstrapDir } from "../src/config/paths.js";
-import { addMemoryCard, compactHotSummary } from "../src/memory/operations.js";
+import { addMemoryCard, compactHotSummary, compactSessionsToCard } from "../src/memory/operations.js";
+import { appendSessionLog } from "../src/memory/sessions.js";
 import { retrieveMemory } from "../src/memory/retrieval.js";
 import { readHotSummary } from "../src/memory/store.js";
 
@@ -56,5 +57,11 @@ describe("memory compaction", () => {
     await compactHotSummary({ maxTokens: 100, estimateTokens: (text) => Math.ceil(text.length / 4) });
     const hot = await readHotSummary();
     expect(hot).toContain("compact me");
+  });
+
+  it("compacts sessions into a memory card", async () => {
+    await appendSessionLog("session entry");
+    const card = await compactSessionsToCard();
+    expect(card?.id).toBeTruthy();
   });
 });

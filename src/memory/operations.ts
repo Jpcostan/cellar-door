@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { getCardsDir } from "../config/paths.js";
+import { getCardsDir, getSessionsDir } from "../config/paths.js";
 import { addToIndex, buildIndexEntry, readIndex, writeIndex, writeHotSummary, readHotSummary, writeMemoryCard } from "./store.js";
 import { MemoryCard, MemoryIndexEntry, MemoryScope, MemoryType } from "./types.js";
 
@@ -103,6 +103,37 @@ export async function compactHotSummary(options: CompactOptions): Promise<string
 
   await writeHotSummary(content);
   return content;
+}
+
+export async function compactSessionsToCard(): Promise<MemoryIndexEntry | null> {
+  const sessionsDir = getSessionsDir();
+  let files: string[] = [];
+  try {
+    files = await fs.readdir(sessionsDir);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      return null;
+    }
+    throw error;
+  }
+  if (files.length === 0) {
+    return null;
+  }
+  const latest = files.sort().at(-1);
+  if (!latest) {
+    return null;
+  }
+  const raw = await fs.readFile(path.join(sessionsDir, latest), "utf-8");
+  const snippet = raw.trim().slice(0, 800);
+  if (!snippet) {
+    return null;
+  }
+  return addMemoryCard({
+    content: snippet,
+    tags: ["session"],
+    type: "snippet",
+    scope: "project",
+  });
 }
 
 export async function gcIndex(): Promise<{ removed: number; remaining: number }> {

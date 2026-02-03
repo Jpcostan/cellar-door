@@ -46,6 +46,8 @@ cellar-door fixes this by enforcing **retrieval over loading**, **policy-gated t
 - Tools are schema-defined with a declared **side-effect class**.
 - Policies allow/deny by tool, path, or network domain.
 - Interactive approvals for high-risk actions.
+ - Browser and desktop automation are opt-in; headless browser runs require explicit policy approval.
+ - Desktop tools are currently implemented for macOS only.
 
 ### Team-ready controls
 - Namespaced memory scopes (`org/`, `team/`, `project/`, `user/`).
@@ -174,7 +176,9 @@ User → CLI → Runtime
 Example `~/.cellar-door/config.json` (future schema may evolve):
 ```json
 {
+  "approvedModelProviders": ["http", "ollama", "lmstudio"],
   "workspaceRoot": "~/dev/my-project",
+  "userIdentity": "alice",
   "tokenBudgets": {
     "bootstrapMax": 2000,
     "retrievedMemoryMax": 2500
@@ -183,7 +187,17 @@ Example `~/.cellar-door/config.json` (future schema may evolve):
     "allowDomains": ["api.github.com", "docs.company.com"]
   },
   "tools": {
-    "execEnabled": false
+    "execEnabled": false,
+    "browserEnabled": false,
+    "browserHeadless": false,
+    "desktopEnabled": false
+  },
+  "policy": {
+    "allowTools": ["fs.read", "git.status"],
+    "allowDomains": ["api.github.com"],
+    "allowUi": false,
+    "allowDesktop": false,
+    "allowHeadless": false
   }
 }
 ```

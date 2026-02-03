@@ -1,5 +1,5 @@
 import type { Logger } from "../logging/logger.js";
-import { addMemoryCard, compactHotSummary, gcIndex, readHotSummaryText, searchMemory } from "../memory/operations.js";
+import { addMemoryCard, compactHotSummary, compactSessionsToCard, gcIndex, readHotSummaryText, searchMemory } from "../memory/operations.js";
 import type { MemoryScope, MemoryType } from "../memory/types.js";
 import { loadConfig } from "../config/load.js";
 
@@ -49,7 +49,8 @@ export async function runMemoryCompact(logger: Logger): Promise<void> {
   const hotMax = config?.tokenBudgets?.hotMax ?? 512;
   const estimateTokens = (text: string) => Math.ceil(text.length / 4);
   const summary = await compactHotSummary({ maxTokens: hotMax, estimateTokens });
-  logger.info("Hot summary updated.", { tokens: hotMax, length: summary.length });
+  const card = await compactSessionsToCard();
+  logger.info("Hot summary updated.", { tokens: hotMax, length: summary.length, card: card?.id ?? null });
 }
 
 export async function runMemoryGc(logger: Logger): Promise<void> {

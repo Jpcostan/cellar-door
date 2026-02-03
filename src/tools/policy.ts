@@ -1,6 +1,6 @@
 import type { SideEffectClass, ToolDefinition } from "../protocol/types.js";
 import type { Config } from "../config/schema.js";
-import { isToolAllowed, isUiAllowed } from "../policy/engine.js";
+import { isToolAllowed, isUiAllowed, isDesktopAllowed, isHeadlessAllowed } from "../policy/engine.js";
 
 export interface PolicyDecision {
   allowed: boolean;
@@ -33,6 +33,13 @@ export function evaluateToolPolicy(tool: ToolDefinition, config: Config | null):
     if (!config?.tools?.browserEnabled) {
       return { allowed: false, reason: "browser automation is disabled by default.", requiresApproval: false };
     }
+    if (config?.tools?.browserHeadless) {
+      const headlessAllowed = isHeadlessAllowed(config);
+      if (!headlessAllowed.allowed) {
+        return { allowed: false, reason: headlessAllowed.reason, requiresApproval: false };
+      }
+      return { allowed: true, reason: "Headless browser requires approval.", requiresApproval: true };
+    }
   }
 
   if (tool.sideEffectClass === "screen_capture") {
@@ -40,8 +47,26 @@ export function evaluateToolPolicy(tool: ToolDefinition, config: Config | null):
     if (!uiAllowed.allowed) {
       return { allowed: false, reason: uiAllowed.reason, requiresApproval: false };
     }
-    if (!config?.tools?.browserEnabled) {
+    if (tool.name.startsWith("desktop.")) {
+      const desktopAllowed = isDesktopAllowed(config);
+      if (!desktopAllowed.allowed) {
+        return { allowed: false, reason: desktopAllowed.reason, requiresApproval: false };
+      }
+      if (!config?.tools?.desktopEnabled) {
+        return { allowed: false, reason: "desktop control is disabled by default.", requiresApproval: false };
+      }
+    } else if (!config?.tools?.browserEnabled) {
       return { allowed: false, reason: "screen capture is disabled by default.", requiresApproval: false };
+    }
+  }
+
+  if (tool.sideEffectClass === "ui_control" && tool.name.startsWith("desktop.")) {
+    const desktopAllowed = isDesktopAllowed(config);
+    if (!desktopAllowed.allowed) {
+      return { allowed: false, reason: desktopAllowed.reason, requiresApproval: false };
+    }
+    if (!config?.tools?.desktopEnabled) {
+      return { allowed: false, reason: "desktop control is disabled by default.", requiresApproval: false };
     }
   }
 
