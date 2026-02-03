@@ -7,6 +7,7 @@ import { BUILTIN_TOOLS, BUILTIN_HANDLERS } from "../src/tools/builtins.js";
 import { executeToolCall } from "../src/tools/executor.js";
 import type { ApprovalProvider } from "../src/tools/approvals.js";
 import type { ToolCall } from "../src/protocol/types.js";
+import { ENV_HOME } from "../src/config/paths.js";
 
 class AutoApprove implements ApprovalProvider {
   async requestApproval(): Promise<boolean> {
@@ -24,10 +25,12 @@ let workspace: string;
 
 beforeEach(async () => {
   workspace = await fs.mkdtemp(path.join(os.tmpdir(), "cellar-door-tools-"));
+  process.env[ENV_HOME] = workspace;
 });
 
 afterEach(async () => {
   await fs.rm(workspace, { recursive: true, force: true });
+  delete process.env[ENV_HOME];
 });
 
 describe("tool execution", () => {

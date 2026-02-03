@@ -94,6 +94,8 @@ cellar-door doctor
 | `cellar-door run "<task>"` | Execute a task using retrieval and policy gating |
 | `cellar-door memory add|search|compact|gc` | Manage memory cards, retrieval, and compaction |
 | `cellar-door tool list|describe` | Inspect built-in tools and schemas |
+| `cellar-door policy check|explain|approve` | Inspect and reason about policy decisions |
+| `cellar-door audit tail` | View recent audit log entries |
 
 > Additional commands (`policy`, `tool`, `plugin`) are planned for Phase 4+.
 

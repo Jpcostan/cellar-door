@@ -11,6 +11,8 @@ import { CliApprovalProvider } from "../tools/approvals.js";
 import { executeToolCall, ToolContext } from "../tools/executor.js";
 import { BUILTIN_HANDLERS } from "../tools/builtins.js";
 import type { Config } from "../config/schema.js";
+import { appendAudit } from "../audit/log.js";
+import { isModelAllowed } from "../policy/engine.js";
 
 export interface RunOptions {
   modelProvider: ModelProvider;
@@ -75,6 +77,18 @@ export async function runTask(task: string, options: RunOptions): Promise<RunOut
   });
   const prompt = buildPrompt(task, memory.items);
 
+  const modelPolicy = isModelAllowed(options.modelProvider.kind, options.config ?? null);
+  if (!modelPolicy.allowed) {
+    await appendAudit({
+      ts: new Date().toISOString(),
+      type: "policy",
+      actor: "runtime",
+      message: modelPolicy.reason,
+      data: { provider: options.modelProvider.kind },
+    });
+    throw new Error(modelPolicy.reason);
+  }
+
   const modelResponse = await options.modelProvider.generate({
     messages: [
       { role: "system", content: "You are a safe, model-agnostic automation gateway." },
@@ -88,6 +102,13 @@ export async function runTask(task: string, options: RunOptions): Promise<RunOut
     model: options.modelProvider.model,
     durationMs: modelResponse.durationMs,
   };
+  await appendAudit({
+    ts: new Date().toISOString(),
+    type: "model",
+    actor: "runtime",
+    message: "Model invocation",
+    data: { provider: options.modelProvider.kind, model: options.modelProvider.model, traceId },
+  });
 
   const parsed = extractResponse(modelResponse.content);
   trace.toolCalls = parsed.toolCalls;
@@ -107,7 +128,15 @@ export async function runTask(task: string, options: RunOptions): Promise<RunOut
       toolResults.push(denyToolCall(call, decision.reason));
       continue;
     }
-    toolResults.push(await executeToolCall(call, context));
+    const result = await executeToolCall(call, context);
+    toolResults.push(result);
+    await appendAudit({
+      ts: new Date().toISOString(),
+      type: "tool",
+      actor: "runtime",
+      message: `Tool ${call.name} ${result.status}`,
+      data: { id: call.id, name: call.name, status: result.status },
+    });
   }
 
   trace.toolResults = toolResults;

@@ -38,3 +38,11 @@ export function getIndexPath(): string {
 export function getSessionsDir(): string {
   return path.join(getHomeDir(), "sessions");
 }
+
+export function getAuditDir(): string {
+  return path.join(getHomeDir(), "audit");
+}
+
+export function getAuditLogPath(): string {
+  return path.join(getAuditDir(), "audit.log");
+}

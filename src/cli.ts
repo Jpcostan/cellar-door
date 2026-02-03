@@ -10,6 +10,8 @@ import { runTask } from "./runtime/run.js";
 import { runMemoryAdd, runMemoryCompact, runMemoryGc, runMemorySearch } from "./commands/memory.js";
 import { BUILTIN_TOOLS } from "./tools/builtins.js";
 import { runToolDescribe, runToolList } from "./commands/tool.js";
+import { runPolicyCheck, runPolicyExplain, runPolicyApprove, runPolicyCheckDomain, runPolicyCheckPath, runPolicyCheckUi, runPolicyCheckModel } from "./commands/policy.js";
+import { runAuditTail } from "./commands/audit.js";
 
 const program = new Command();
 
@@ -141,6 +143,94 @@ tool
     const logger = createLogger({ json: program.opts().json as boolean });
     const registry = new InMemoryToolRegistry(BUILTIN_TOOLS);
     await runToolDescribe(name, registry, logger);
+  });
+
+const policy = program.command("policy").description("Evaluate policy rules");
+
+policy
+  .command("check")
+  .description("Check if a tool is allowed by policy")
+  .argument("<name>", "Tool name")
+  .action(async (name: string) => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    const config = await loadConfig();
+    const registry = new InMemoryToolRegistry(BUILTIN_TOOLS);
+    const toolDef = registry.get(name);
+    if (!toolDef) {
+      logger.error("Tool not found.", { name });
+      process.exitCode = 1;
+      return;
+    }
+    await runPolicyCheck(toolDef, config, logger);
+  });
+
+policy
+  .command("explain")
+  .description("Show current policy configuration")
+  .action(async () => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    const config = await loadConfig();
+    await runPolicyExplain(config, logger);
+  });
+
+policy
+  .command("approve")
+  .description("Record a manual approval (session-only)")
+  .argument("<name>", "Tool name")
+  .action(async (name: string) => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    const config = await loadConfig();
+    await runPolicyApprove(name, config, logger);
+  });
+
+policy
+  .command("check-path")
+  .description("Check a filesystem path against policy")
+  .argument("<path>", "Path to check")
+  .action(async (value: string) => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    const config = await loadConfig();
+    await runPolicyCheckPath(value, config, logger);
+  });
+
+policy
+  .command("check-domain")
+  .description("Check a network domain against policy")
+  .argument("<domain>", "Domain to check")
+  .action(async (value: string) => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    const config = await loadConfig();
+    await runPolicyCheckDomain(value, config, logger);
+  });
+
+policy
+  .command("check-ui")
+  .description("Check UI control policy")
+  .action(async () => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    const config = await loadConfig();
+    await runPolicyCheckUi(config, logger);
+  });
+
+policy
+  .command("check-model")
+  .description("Check model provider against policy")
+  .argument("<provider>", "Provider kind (e.g., http)")
+  .action(async (value: string) => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    const config = await loadConfig();
+    await runPolicyCheckModel(value, config, logger);
+  });
+
+const audit = program.command("audit").description("Audit log viewer");
+
+audit
+  .command("tail")
+  .description("Show recent audit events")
+  .option("--limit <limit>", "Number of entries", (value) => Number.parseInt(value, 10), 50)
+  .action(async (options: { limit: number }) => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    await runAuditTail(options.limit, logger);
   });
 
 program.parseAsync(process.argv).catch((error) => {

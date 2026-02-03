@@ -11,6 +11,7 @@ export const ModelProviderSchema = z.object({
 export const ConfigSchema = z.object({
   version: z.literal(1),
   modelProvider: ModelProviderSchema.nullable(),
+  approvedModelProviders: z.array(z.string()).optional(),
   workspaceRoot: z.string().optional(),
   network: z
     .object({
@@ -22,6 +23,17 @@ export const ConfigSchema = z.object({
       execEnabled: z.boolean().optional(),
       browserEnabled: z.boolean().optional(),
       browserHeadless: z.boolean().optional(),
+    })
+    .optional(),
+  policy: z
+    .object({
+      allowTools: z.array(z.string()).optional(),
+      denyTools: z.array(z.string()).optional(),
+      allowPaths: z.array(z.string()).optional(),
+      denyPaths: z.array(z.string()).optional(),
+      allowDomains: z.array(z.string()).optional(),
+      denyDomains: z.array(z.string()).optional(),
+      allowUi: z.boolean().optional(),
     })
     .optional(),
   tokenBudgets: z
@@ -39,8 +51,10 @@ export type Config = z.infer<typeof ConfigSchema>;
 export const DEFAULT_CONFIG: Config = {
   version: 1,
   modelProvider: null,
+  approvedModelProviders: undefined,
   workspaceRoot: undefined,
   network: undefined,
   tools: undefined,
+  policy: undefined,
   tokenBudgets: undefined,
 };

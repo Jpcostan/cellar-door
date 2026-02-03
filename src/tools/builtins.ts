@@ -5,6 +5,7 @@ import { promisify } from "node:util";
 import type { Config } from "../config/schema.js";
 import type { ToolDefinition } from "../protocol/types.js";
 import type { ToolHandler } from "./executor.js";
+import { isDomainAllowed, isPathAllowed } from "../policy/engine.js";
 
 const execFileAsync = promisify(execFile);
 
@@ -24,8 +25,12 @@ function ensureWithinWorkspace(targetPath: string, workspaceRoot: string): strin
 }
 
 function ensureDomainAllowed(url: string, config: Config | null): void {
-  const allowed = config?.network?.allowDomains ?? [];
   const host = new URL(url).hostname;
+  const policy = isDomainAllowed(host, config);
+  if (!policy.allowed) {
+    throw new Error(policy.reason);
+  }
+  const allowed = config?.network?.allowDomains ?? [];
   if (allowed.length === 0 || !allowed.includes(host)) {
     throw new Error("Network domain not allowlisted.");
   }
@@ -292,6 +297,10 @@ export const BUILTIN_HANDLERS: Map<string, ToolHandler> = new Map([
     execute: async (args, config) => {
       const workspace = resolveWorkspace(config);
       const target = ensureWithinWorkspace(String(args.path), workspace);
+      const pathPolicy = isPathAllowed(target, config);
+      if (!pathPolicy.allowed) {
+        throw new Error(pathPolicy.reason);
+      }
       const encoding = typeof args.encoding === "string" ? args.encoding : "utf-8";
       const content = await fs.readFile(target, encoding as BufferEncoding);
       return { content };
@@ -302,6 +311,10 @@ export const BUILTIN_HANDLERS: Map<string, ToolHandler> = new Map([
     execute: async (args, config) => {
       const workspace = resolveWorkspace(config);
       const target = ensureWithinWorkspace(String(args.path), workspace);
+      const pathPolicy = isPathAllowed(target, config);
+      if (!pathPolicy.allowed) {
+        throw new Error(pathPolicy.reason);
+      }
       const content = String(args.content ?? "");
       await fs.mkdir(path.dirname(target), { recursive: true, mode: 0o700 });
       await fs.writeFile(target, content, { mode: 0o600 });
