@@ -13,8 +13,7 @@ function expandEnv(value: string): string {
   });
 }
 
-function expandHeaders(headers: Record<string, string> | undefined): Record<string, string> | undefined {
-  if (!headers) return undefined;
+function expandHeaders(headers: Record<string, string>): Record<string, string> {
   const entries = Object.entries(headers).map(([key, value]) => [key, expandEnv(value)]);
   return Object.fromEntries(entries);
 }

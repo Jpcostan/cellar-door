@@ -38,16 +38,27 @@ async function promptRequired(question: string): Promise<string> {
 }
 
 async function promptSelect<T>(question: string, options: Array<{ label: string; value: T }>, defaultIndex = 0): Promise<T> {
+  if (options.length === 0) {
+    throw new Error("No options available for selection.");
+  }
   const lines = options.map((option, index) => `${index + 1}) ${option.label}`).join("\n");
   const prompt = `${question}\n${lines}\nChoose [${defaultIndex + 1}]: `;
   while (true) {
     const answer = (await promptInput(prompt)).trim();
     if (!answer) {
-      return options[defaultIndex].value;
+      const fallback = options[defaultIndex];
+      if (!fallback) {
+        throw new Error("Invalid default selection.");
+      }
+      return fallback.value;
     }
     const selection = Number.parseInt(answer, 10);
     if (Number.isFinite(selection) && selection >= 1 && selection <= options.length) {
-      return options[selection - 1].value;
+      const chosen = options[selection - 1];
+      if (!chosen) {
+        throw new Error("Invalid selection.");
+      }
+      return chosen.value;
     }
   }
 }
