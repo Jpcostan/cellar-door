@@ -11,6 +11,13 @@ export const ModelProviderSchema = z.object({
 export const ConfigSchema = z.object({
   version: z.literal(1),
   modelProvider: ModelProviderSchema.nullable(),
+  tokenBudgets: z
+    .object({
+      bootstrapMax: z.number().int().positive(),
+      hotMax: z.number().int().positive(),
+      warmMax: z.number().int().positive(),
+    })
+    .optional(),
 });
 
 export type ModelProviderConfig = z.infer<typeof ModelProviderSchema>;
@@ -19,4 +26,5 @@ export type Config = z.infer<typeof ConfigSchema>;
 export const DEFAULT_CONFIG: Config = {
   version: 1,
   modelProvider: null,
+  tokenBudgets: undefined,
 };

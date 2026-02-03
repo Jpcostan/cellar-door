@@ -7,6 +7,7 @@ import { loadConfig } from "./config/load.js";
 import { buildModelProvider } from "./model/factory.js";
 import { InMemoryToolRegistry } from "./tools/registry.js";
 import { runTask } from "./runtime/run.js";
+import { runMemoryAdd, runMemoryCompact, runMemoryGc, runMemorySearch } from "./commands/memory.js";
 
 const program = new Command();
 
@@ -54,12 +55,68 @@ program
     }
     const provider = buildModelProvider(config.modelProvider);
     const registry = new InMemoryToolRegistry([]);
-    const outcome = await runTask(task, { modelProvider: provider, toolRegistry: registry, logger });
+    const runOptions = {
+      modelProvider: provider,
+      toolRegistry: registry,
+      logger,
+      ...(config.tokenBudgets ? { tokenBudgets: config.tokenBudgets } : {}),
+    };
+    const outcome = await runTask(task, runOptions);
     if (program.opts().json) {
       logger.info("Run outcome", { trace: outcome.trace, toolResults: outcome.toolResults });
     } else {
       process.stdout.write(`${outcome.response}\n`);
     }
+  });
+
+const memory = program.command("memory").description("Manage memory cards and summaries");
+
+memory
+  .command("add")
+  .description("Add a memory card")
+  .argument("<content>", "Memory content")
+  .option("--tags <tags>", "Comma-separated tags")
+  .option("--scope <scope>", "Scope (org|team|project|user)", "project")
+  .option("--type <type>", "Type (fact|lesson|decision|snippet)", "fact")
+  .option("--importance <importance>", "Importance 0..1", (value) => Number.parseFloat(value), 0.5)
+  .action(async (content: string, options: { tags?: string; scope: string; type: string; importance: number }) => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    const addOptions: { tags?: string; scope?: "org" | "team" | "project" | "user"; type?: "fact" | "lesson" | "decision" | "snippet"; importance?: number } = {};
+    if (options.tags) addOptions.tags = options.tags;
+    if (options.scope) addOptions.scope = options.scope as "org" | "team" | "project" | "user";
+    if (options.type) addOptions.type = options.type as "fact" | "lesson" | "decision" | "snippet";
+    if (Number.isFinite(options.importance)) addOptions.importance = options.importance;
+    await runMemoryAdd(content, addOptions, logger);
+  });
+
+memory
+  .command("search")
+  .description("Search memory cards")
+  .argument("<query>", "Query text")
+  .option("--scope <scope>", "Scope (org|team|project|user)")
+  .option("--limit <limit>", "Max results", (value) => Number.parseInt(value, 10), 5)
+  .action(async (query: string, options: { scope?: string; limit: number }) => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    const searchOptions: { scope?: "org" | "team" | "project" | "user"; limit?: number } = {};
+    if (options.scope) searchOptions.scope = options.scope as "org" | "team" | "project" | "user";
+    if (Number.isFinite(options.limit)) searchOptions.limit = options.limit;
+    await runMemorySearch(query, searchOptions, logger);
+  });
+
+memory
+  .command("compact")
+  .description("Compact memory into hot summary")
+  .action(async () => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    await runMemoryCompact(logger);
+  });
+
+memory
+  .command("gc")
+  .description("Garbage collect memory index")
+  .action(async () => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    await runMemoryGc(logger);
   });
 
 program.parseAsync(process.argv).catch((error) => {

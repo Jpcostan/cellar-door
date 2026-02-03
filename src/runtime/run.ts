@@ -1,15 +1,18 @@
 import { ModelProvider } from "../model/provider.js";
 import { createTraceId } from "../protocol/ids.js";
 import { RunTrace, ToolCall, ToolResult } from "../protocol/types.js";
-import { retrieveMemory } from "../memory/retrieval.js";
+import { retrieveMemory, RetrievalBudget } from "../memory/retrieval.js";
 import { defaultPolicyForToolCall, denyToolCall } from "./policy.js";
 import { ToolRegistry } from "../tools/registry.js";
 import type { Logger } from "../logging/logger.js";
+import { appendSessionLog } from "../memory/sessions.js";
 
 export interface RunOptions {
   modelProvider: ModelProvider;
   toolRegistry: ToolRegistry;
   logger: Logger;
+  tokenBudgets?: RetrievalBudget;
+  scope?: "org" | "team" | "project" | "user";
 }
 
 export interface RunOutcome {
@@ -21,6 +24,17 @@ export interface RunOutcome {
 function buildPrompt(task: string, memory: string[]): string {
   const memorySection = memory.length > 0 ? memory.join("\n") : "(none)";
   return `You are cellar-door.\n\nMemory (retrieved, budgeted):\n${memorySection}\n\nTask:\n${task}\n\nRespond with JSON: {"response": "...", "toolCalls": []}.`;
+}
+
+function resolveBudgets(contextWindow: number, override?: RetrievalBudget): RetrievalBudget {
+  if (override) {
+    return override;
+  }
+  const total = Math.min(4096, Math.floor(contextWindow * 0.25));
+  const bootstrapMax = Math.floor(total * 0.25);
+  const hotMax = Math.floor(total * 0.25);
+  const warmMax = Math.max(0, total - bootstrapMax - hotMax);
+  return { bootstrapMax, hotMax, warmMax };
 }
 
 function extractResponse(content: string): { response: string; toolCalls: ToolCall[] } {
@@ -45,7 +59,13 @@ export async function runTask(task: string, options: RunOptions): Promise<RunOut
     toolResults: [],
   };
 
-  const memory = await retrieveMemory(task, 0);
+  const budgets = resolveBudgets(options.modelProvider.capabilities().contextWindow, options.tokenBudgets);
+  const memory = await retrieveMemory({
+    task,
+    scope: options.scope ?? "project",
+    budget: budgets,
+    estimateTokens: options.modelProvider.estimateTokens.bind(options.modelProvider),
+  });
   const prompt = buildPrompt(task, memory.items);
 
   const modelResponse = await options.modelProvider.generate({
@@ -95,6 +115,9 @@ export async function runTask(task: string, options: RunOptions): Promise<RunOut
   trace.toolResults = toolResults;
 
   options.logger.info("Run completed.", { traceId, toolCalls: toolResults.length });
+  await appendSessionLog(
+    `# ${new Date().toISOString()}\n\nTask:\n${task}\n\nResponse:\n${parsed.response}\n\nTrace:\n${traceId}\n\n---\n`
+  );
 
   return {
     response: parsed.response,

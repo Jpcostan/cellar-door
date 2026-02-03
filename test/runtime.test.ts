@@ -1,9 +1,32 @@
 import { describe, it, expect } from "vitest";
+import { beforeEach, afterEach } from "vitest";
+import fs from "node:fs/promises";
+import os from "node:os";
+import path from "node:path";
 import { runTask } from "../src/runtime/run.js";
 import { InMemoryToolRegistry } from "../src/tools/registry.js";
 import { ToolDefinition } from "../src/protocol/types.js";
 import type { Logger } from "../src/logging/logger.js";
 import type { ModelProvider, ModelRequest, ModelResponse } from "../src/model/provider.js";
+import { ENV_HOME } from "../src/config/paths.js";
+
+let tempDir: string | null = null;
+
+async function createTempHome(): Promise<string> {
+  return fs.mkdtemp(path.join(os.tmpdir(), "cellar-door-runtime-"));
+}
+
+beforeEach(async () => {
+  tempDir = await createTempHome();
+  process.env[ENV_HOME] = tempDir;
+});
+
+afterEach(async () => {
+  if (tempDir) {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  }
+  delete process.env[ENV_HOME];
+});
 
 class MockProvider implements ModelProvider {
   readonly kind = "mock";

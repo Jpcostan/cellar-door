@@ -91,8 +91,10 @@ cellar-door doctor
 | `cellar-door init` | Initialize config and local data directory |
 | `cellar-door doctor` | Verify environment and config |
 | `cellar-door version` | Print installed version |
+| `cellar-door run "<task>"` | Execute a task using retrieval and policy gating |
+| `cellar-door memory add|search|compact|gc` | Manage memory cards, retrieval, and compaction |
 
-> Additional commands (`run`, `memory`, `policy`, `tool`, `plugin`) are planned for Phase 2+.
+> Additional commands (`policy`, `tool`, `plugin`) are planned for Phase 4+.
 
 ---
 
