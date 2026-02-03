@@ -37,6 +37,17 @@ npx cellar-door init
 npx cellar-door doctor
 ```
 
+### Install locally (project-only)
+```bash
+npm install cellar-door
+npm exec -- cellar-door init
+```
+
+You can also run the local binary directly:
+```bash
+./node_modules/.bin/cellar-door init
+```
+
 ### Install globally
 ```bash
 npm install -g cellar-door
