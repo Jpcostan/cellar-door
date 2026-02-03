@@ -18,6 +18,13 @@ npm run build
 npm run smoke
 ```
 
+## Release checklist
+
+1. Ensure the CI pipeline is green on `main`.
+2. Run `npm run release:check` locally.
+3. Bump version and update `CHANGELOG.md`.
+4. Publish to npm only after the pipeline passes.
+
 ## Reporting issues
 
 Include:
@@ -25,4 +32,3 @@ Include:
 - what happened
 - repro steps
 - environment (OS, Node version)
-
