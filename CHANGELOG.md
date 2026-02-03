@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Core runtime spine, memory system, tools, policy engine, audit logging, plugins, team mode
 - Benchmarks and security checklist
+- New setup wizard (`cellar-door setup`) with Quickstart + Advanced modes
+- Optional `.env` storage for model credentials
 
 ## [0.0.3] - 2026-02-03
 

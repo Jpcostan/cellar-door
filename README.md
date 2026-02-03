@@ -33,19 +33,19 @@ cellar-door fixes this by enforcing **retrieval over loading**, **policy-gated t
 
 ### Run without installing
 ```bash
-npx cellar-door init
+npx cellar-door setup
 npx cellar-door doctor
 ```
 
 ### Install locally (project-only)
 ```bash
 npm install cellar-door
-npm exec -- cellar-door init
+npm exec -- cellar-door setup
 ```
 
 You can also run the local binary directly:
 ```bash
-./node_modules/.bin/cellar-door init
+./node_modules/.bin/cellar-door setup
 ```
 
 ### Install globally
@@ -62,15 +62,17 @@ cellar-door is local-first. Configuration and data live in `~/.cellar-door/`.
 
 1) Initialize config:
 ```bash
-cellar-door init
+cellar-door setup
 ```
 
 If you already have a config and want to re-run setup prompts:
 ```bash
-cellar-door init --force
+cellar-door setup --force
 ```
 
 2) Configure a model provider in `~/.cellar-door/config.json`:
+
+Secrets are stored in `~/.cellar-door/.env` (recommended) and referenced by `config.json`.
 
 **OpenAI-compatible HTTP**
 ```json
@@ -140,7 +142,7 @@ cellar-door init --force
 ## Quickstart
 
 ```bash
-cellar-door init
+cellar-door setup
 cellar-door doctor
 cellar-door run "Summarize the repo"
 ```
@@ -151,7 +153,8 @@ cellar-door run "Summarize the repo"
 
 | Command | Description |
 | --- | --- |
-| `cellar-door init` | Initialize config and local data directory |
+| `cellar-door setup` | Initialize config and local data directory |
+| `cellar-door init` | Alias for `setup` |
 | `cellar-door doctor` | Verify environment and config |
 | `cellar-door version` | Print installed version |
 | `cellar-door run "<task>"` | Execute a task using retrieval and policy gating |

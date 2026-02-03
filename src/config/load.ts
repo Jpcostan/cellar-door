@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import { Config, ConfigSchema, DEFAULT_CONFIG } from "./schema.js";
 import { getConfigPath, getHomeDir } from "./paths.js";
+import { loadEnvFromHome } from "./env.js";
 
 export class ConfigError extends Error {
   constructor(message: string) {
@@ -16,6 +17,7 @@ export async function ensureHomeDir(): Promise<string> {
 }
 
 export async function loadConfig(): Promise<Config | null> {
+  await loadEnvFromHome();
   const configPath = getConfigPath();
   try {
     const raw = await fs.readFile(configPath, "utf-8");

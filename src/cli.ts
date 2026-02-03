@@ -24,7 +24,17 @@ program
 
 program
   .command("init")
-  .description("Initialize cellar-door configuration")
+  .description("Initialize or reconfigure cellar-door configuration (alias: setup)")
+  .option("-f, --force", "Recreate config and re-run setup prompts", false)
+  .action(async (options: { force?: boolean }) => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    const initOptions = options.force === undefined ? undefined : { force: options.force };
+    await runInit(logger, initOptions);
+  });
+
+program
+  .command("setup")
+  .description("Set up model provider and config (recommended)")
   .option("-f, --force", "Recreate config and re-run setup prompts", false)
   .action(async (options: { force?: boolean }) => {
     const logger = createLogger({ json: program.opts().json as boolean });
