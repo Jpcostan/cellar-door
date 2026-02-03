@@ -1,8 +1,8 @@
-# celler-door
+# cellar-door
 
 **Local-first automation gateway + memory system for agents** — powerful for solo power users, safe and auditable for teams.
 
-Unlike "markdown memory" systems that bloat over time and burn tokens on every run, celler-door uses **retrieval + compaction**:
+Unlike "markdown memory" systems that bloat over time and burn tokens on every run, cellar-door uses **retrieval + compaction**:
 
 - Keep a tiny always-loaded bootstrap
 - Store everything else as atomic "memory cards"
@@ -17,7 +17,7 @@ Unlike "markdown memory" systems that bloat over time and burn tokens on every r
 
 ### Local-first by default
 
-Runs entirely on your machine. State lives in `~/.celler-door/`. Network surfaces are optional and treated as plugins/transports.
+Runs entirely on your machine. State lives in `~/.cellar-door/`. Network surfaces are optional and treated as plugins/transports.
 
 ### Token-efficient memory
 
@@ -44,15 +44,15 @@ Runs entirely on your machine. State lives in `~/.celler-door/`. Network surface
 ### Run without installing (recommended to start)
 
 ```bash
-npx celler-door init
-npx celler-door doctor
+npx cellar-door init
+npx cellar-door doctor
 ```
 
 ### Install globally
 
 ```bash
-npm install -g celler-door
-celler-door --help
+npm install -g cellar-door
+cellar-door --help
 ```
 
 ---
@@ -62,25 +62,25 @@ celler-door --help
 **Initialize:**
 
 ```bash
-celler-door init
+cellar-door init
 ```
 
 **Run a task:**
 
 ```bash
-celler-door run "Summarize the repo and tell me where env vars are configured"
+cellar-door run "Summarize the repo and tell me where env vars are configured"
 ```
 
 **Search memory:**
 
 ```bash
-celler-door memory search "ssh key"
+cellar-door memory search "ssh key"
 ```
 
 **Compact memory (manual trigger):**
 
 ```bash
-celler-door memory compact
+cellar-door memory compact
 ```
 
 ---
@@ -89,12 +89,12 @@ celler-door memory compact
 
 | Command | Description |
 |---------|-------------|
-| `celler-door init` | Create config + local storage directory and run first-time setup |
-| `celler-door run "<task>"` | Execute a task using retrieval + tools + policy gating |
-| `celler-door memory add\|search\|compact\|gc` | Manage memory cards, retrieve knowledge, compact logs, garbage collect |
-| `celler-door policy check\|explain\|approve` | Inspect/test policies and approve gated actions |
-| `celler-door tool list\|describe` | List available tools and show schemas + side-effect classes |
-| `celler-door plugin add\|remove\|list` | Install and manage plugins |
+| `cellar-door init` | Create config + local storage directory and run first-time setup |
+| `cellar-door run "<task>"` | Execute a task using retrieval + tools + policy gating |
+| `cellar-door memory add\|search\|compact\|gc` | Manage memory cards, retrieve knowledge, compact logs, garbage collect |
+| `cellar-door policy check\|explain\|approve` | Inspect/test policies and approve gated actions |
+| `cellar-door tool list\|describe` | List available tools and show schemas + side-effect classes |
+| `cellar-door plugin add\|remove\|list` | Install and manage plugins |
 
 ---
 
@@ -131,7 +131,7 @@ User → CLI → Core Runtime
 
 Because memory grows unbounded and becomes a recurring token tax.
 
-### celler-door's approach
+### cellar-door's approach
 
 | Layer | Description |
 |-------|-------------|
@@ -143,7 +143,7 @@ Because memory grows unbounded and becomes a recurring token tax.
 ### Storage layout
 
 ```
-~/.celler-door/
+~/.cellar-door/
 ├── bootstrap/
 │   ├── identity.md
 │   ├── policies.md
@@ -177,7 +177,7 @@ Keep private SSH keys local. Put public keys in authorized_keys on the remote.
 
 ### Retrieval & token budgeting
 
-At runtime, celler-door selects the top-K memory cards by tag overlap, recency decay, importance, and scope match (`project > team > org` unless overridden). It then enforces a token budget:
+At runtime, cellar-door selects the top-K memory cards by tag overlap, recency decay, importance, and scope match (`project > team > org` unless overridden). It then enforces a token budget:
 
 - **Bootstrap:** fixed cap
 - **Retrieved memories:** fixed cap
@@ -196,7 +196,7 @@ At runtime, celler-door selects the top-K memory cards by tag overlap, recency d
 
 ## Configuration
 
-`~/.celler-door/config.json` example:
+`~/.cellar-door/config.json` example:
 
 ```json
 {
@@ -234,7 +234,7 @@ Plugin API is versioned. Breaking changes require a major version bump.
 npm install
 npm run build
 npm link
-celler-door --help
+cellar-door --help
 ```
 
 Run tests:
