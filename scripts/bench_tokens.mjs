@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 import { ENV_HOME } from "../dist/config/paths.js";
 import { addMemoryCard, searchMemory } from "../dist/memory/operations.js";
 import fs from "node:fs/promises";

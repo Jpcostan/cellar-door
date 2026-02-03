@@ -1,4 +1,3 @@
-/* eslint-disable no-undef */
 import { retrieveMemory } from "../dist/memory/retrieval.js";
 import { addMemoryCard } from "../dist/memory/operations.js";
 import { ENV_HOME } from "../dist/config/paths.js";

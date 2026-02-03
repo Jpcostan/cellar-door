@@ -29,33 +29,6 @@ cellar-door fixes this by enforcing **retrieval over loading**, **policy-gated t
 
 ---
 
-## Features (Current + Planned)
-
-### Local-first by default
-- Runs entirely on your machine.
-- State lives in `~/.cellar-door/`.
-- No public listeners unless explicitly enabled.
-
-### Token-efficient memory
-- Append-only session logs for audit and debug.
-- Automatic compaction into `hot` memory and atomic memory cards.
-- Retrieval ranks by relevance, recency, importance, and scope.
-- Strict token budgets per memory layer.
-
-### Safe tool execution
-- Tools are schema-defined with a declared **side-effect class**.
-- Policies allow/deny by tool, path, or network domain.
-- Interactive approvals for high-risk actions.
- - Browser and desktop automation are opt-in; headless browser runs require explicit policy approval.
- - Desktop tools are currently implemented for macOS only.
-
-### Team-ready controls
-- Namespaced memory scopes (`org/`, `team/`, `project/`, `user/`).
-- Audit logs for tool calls and approvals.
-- Default-deny posture suitable for shared environments.
-
----
-
 ## Installation
 
 ### Run without installing
@@ -72,21 +45,93 @@ cellar-door --help
 
 ---
 
-## Quickstart
+## Setup (Local)
 
-Initialize config:
+cellar-door is local-first. Configuration and data live in `~/.cellar-door/`.
+
+1) Initialize config:
 ```bash
 cellar-door init
 ```
 
-Check environment and config:
-```bash
-cellar-door doctor
+2) Configure a model provider in `~/.cellar-door/config.json`:
+
+**OpenAI-compatible HTTP**
+```json
+{
+  "version": 1,
+  "modelProvider": {
+    "kind": "http",
+    "baseUrl": "https://api.openai.com/v1",
+    "model": "gpt-4o-mini",
+    "headers": { "Authorization": "Bearer $OPENAI_API_KEY" }
+  }
+}
+```
+
+**Ollama**
+```json
+{
+  "version": 1,
+  "modelProvider": {
+    "kind": "ollama",
+    "model": "llama3"
+  }
+}
+```
+
+**LM Studio**
+```json
+{
+  "version": 1,
+  "modelProvider": {
+    "kind": "lmstudio",
+    "model": "local-model"
+  }
+}
+```
+
+3) (Optional) Set policy and tooling defaults:
+```json
+{
+  "approvedModelProviders": ["http", "ollama", "lmstudio"],
+  "workspaceRoot": "~/dev/my-project",
+  "userIdentity": "alice",
+  "network": { "allowDomains": ["api.github.com"] },
+  "tools": {
+    "execEnabled": false,
+    "browserEnabled": false,
+    "browserHeadless": false,
+    "desktopEnabled": false
+  },
+  "policy": {
+    "allowTools": ["fs.read", "git.status"],
+    "allowDomains": ["api.github.com"],
+    "allowUi": false,
+    "allowDesktop": false,
+    "allowHeadless": false
+  },
+  "tokenBudgets": {
+    "bootstrapMax": 2000,
+    "hotMax": 1500,
+    "warmMax": 2500
+  }
+}
 ```
 
 ---
 
-## CLI Commands (Phase 1)
+## Quickstart
+
+```bash
+cellar-door init
+cellar-door doctor
+cellar-door run "Summarize the repo"
+```
+
+---
+
+## CLI Commands
 
 | Command | Description |
 | --- | --- |
@@ -101,64 +146,11 @@ cellar-door doctor
 | `cellar-door plugin add|remove|list|verify|template` | Manage plugins and scaffold new ones |
 | `cellar-door team init|join|sync` | Configure shared team directory |
 
-> Additional commands (`policy`, `tool`, `plugin`) are planned for Phase 4+.
-
 ---
 
-## Memory Model (Design)
+## How It Works
 
-### Layers
-- **Bootstrap**: always loaded, tiny, identity and policies.
-- **Hot**: always available, hard-capped summary of recent context.
-- **Warm**: retrieved on demand under strict budget.
-- **Cold**: audit-only, never injected.
-
-### Storage layout (planned)
-```
-~/.cellar-door/
-├── bootstrap/
-│   ├── identity.md
-│   ├── policies.md
-│   └── project_brief.md
-├── memory/
-│   ├── hot.md
-│   ├── cards/
-│   │   ├── mem_2026_02_02_001.md
-│   │   └── mem_2026_02_02_002.md
-│   └── index.json
-├── sessions/
-│   └── 2026-02-02.md
-├── audit/
-│   └── audit.log
-└── config.json
-```
-
-### Memory card format (planned)
-```yaml
----
-id: mem_2026_02_02_001
-type: lesson
-scope: project
-importance: 0.7
-created_at: 2026-02-02
-tags: [ssh, security]
----
-Keep private SSH keys local. Put public keys in authorized_keys on the remote.
-```
-
----
-
-## Architecture (Planned)
-
-### Components
-- **CLI**: user interface with `--json` output for scripting.
-- **Core Runtime**: orchestrates task execution and retrieval.
-- **Memory Store**: cards, summaries, and audit logs.
-- **Tool Registry + Execution**: schema-validated tools with side-effect classes.
-- **Policy Engine**: default-deny gating with explainable decisions.
-- **Optional Surfaces**: plugins (Slack, Web UI, etc.) with no required listeners.
-
-### Request flow
+**Runtime flow**
 ```
 User → CLI → Runtime
               ├─→ Memory Retrieval (budgeted)
@@ -169,37 +161,32 @@ User → CLI → Runtime
               └─→ Compaction (when needed)
 ```
 
+**Memory model**
+- **Bootstrap** (tiny, always loaded)
+- **Hot** (hard-capped summary)
+- **Warm** (retrieved on demand)
+- **Cold** (audit only, never injected)
+
+**Tooling model**
+- Tools are schema-defined and classified by side-effect class.
+- Policies allow/deny per tool/path/domain/UI.
+- Approvals are time-bounded and audited.
+
 ---
 
-## Configuration
+## Memory Model (Design)
 
-Example `~/.cellar-door/config.json` (future schema may evolve):
-```json
-{
-  "approvedModelProviders": ["http", "ollama", "lmstudio"],
-  "workspaceRoot": "~/dev/my-project",
-  "userIdentity": "alice",
-  "tokenBudgets": {
-    "bootstrapMax": 2000,
-    "retrievedMemoryMax": 2500
-  },
-  "network": {
-    "allowDomains": ["api.github.com", "docs.company.com"]
-  },
-  "tools": {
-    "execEnabled": false,
-    "browserEnabled": false,
-    "browserHeadless": false,
-    "desktopEnabled": false
-  },
-  "policy": {
-    "allowTools": ["fs.read", "git.status"],
-    "allowDomains": ["api.github.com"],
-    "allowUi": false,
-    "allowDesktop": false,
-    "allowHeadless": false
-  }
-}
+### Storage layout
+```
+~/.cellar-door/
+├── bootstrap/
+├── memory/
+│   ├── hot.md
+│   ├── cards/
+│   └── index.json
+├── sessions/
+├── audit/
+└── config.json
 ```
 
 ---
@@ -228,6 +215,8 @@ npm run bench:tokens
 npm run security:check
 ```
 
+---
+
 ## Publishing (npm)
 
 This repo is configured for a public npm package with a `files` whitelist. Publishing runs tests and build automatically:
@@ -238,21 +227,14 @@ npm publish
 
 ---
 
-## Roadmap (High level)
+## Docs & Community
 
-- Model-agnostic provider interface + runtime spine
-- Retrieval-based memory store with compaction
-- Policy engine and tool registry
-- Optional plugin system and surfaces
+- `CHANGELOG.md`
+- `CONTRIBUTING.md`
+- `docs/recipes/`
 
 ---
 
 ## License
 
 MIT
-
-## Docs & Community
-
-- `CHANGELOG.md`
-- `CONTRIBUTING.md`
-- `docs/recipes/`
