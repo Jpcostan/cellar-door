@@ -1,0 +1,84 @@
+# =========================
+# Node / npm / pnpm / yarn
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# =========================
+# Build output
+# =========================
+dist/
+build/
+out/
+
+# =========================
+# TypeScript
+# =========================
+*.tsbuildinfo
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Local runtime data
+# (celler-door stores user data outside the repo,
+# but this protects accidental local test dirs)
+# =========================
+.cellerdoor/
+cellerdoor-data/
+tmp/
+temp/
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# Coverage / test artifacts
+# =========================
+coverage/
+.nyc_output/
+junit.xml
+
+# =========================
+# Editors / IDEs
+# =========================
+.vscode/
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Packaging / release
+# =========================
+*.tgz
+*.tar.gz
+
+# =========================
+# SQLite / local indexes
+# =========================
+*.sqlite
+*.sqlite3
+
+# =========================
+# Misc
+# =========================
+.cache/
+.eslintcache
+
