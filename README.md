@@ -1,5 +1,7 @@
 # cellar-door
 
+![CI](https://github.com/Jpcostan/cellar-door/actions/workflows/ci.yml/badge.svg)
+
 **Local-first automation gateway + memory system for agents** — model-agnostic, safe by default, and auditable.
 
 cellar-door is designed for power users and teams who want automation and memory without opaque behavior or runaway context. It is **retrieve-first**, **default-deny**, and **explicit about side effects**.
