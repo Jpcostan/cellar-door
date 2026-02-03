@@ -30,6 +30,16 @@ export function evaluateToolPolicy(tool: ToolDefinition, config: Config | null):
     if (!uiAllowed.allowed) {
       return { allowed: false, reason: uiAllowed.reason, requiresApproval: false };
     }
+    if (tool.name.startsWith("desktop.")) {
+      const desktopAllowed = isDesktopAllowed(config);
+      if (!desktopAllowed.allowed) {
+        return { allowed: false, reason: desktopAllowed.reason, requiresApproval: false };
+      }
+      if (!config?.tools?.desktopEnabled) {
+        return { allowed: false, reason: "desktop control is disabled by default.", requiresApproval: false };
+      }
+      return { allowed: true, reason: "Desktop control requires approval.", requiresApproval: true };
+    }
     if (!config?.tools?.browserEnabled) {
       return { allowed: false, reason: "browser automation is disabled by default.", requiresApproval: false };
     }
@@ -60,15 +70,6 @@ export function evaluateToolPolicy(tool: ToolDefinition, config: Config | null):
     }
   }
 
-  if (tool.sideEffectClass === "ui_control" && tool.name.startsWith("desktop.")) {
-    const desktopAllowed = isDesktopAllowed(config);
-    if (!desktopAllowed.allowed) {
-      return { allowed: false, reason: desktopAllowed.reason, requiresApproval: false };
-    }
-    if (!config?.tools?.desktopEnabled) {
-      return { allowed: false, reason: "desktop control is disabled by default.", requiresApproval: false };
-    }
-  }
 
   return { allowed: true, reason: "Requires approval.", requiresApproval: true };
 }
