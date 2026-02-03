@@ -1,55 +1,66 @@
 # cellar-door
 
-**Local-first automation gateway + memory system for agents** — powerful for solo power users, safe and auditable for teams.
+**Local-first automation gateway + memory system for agents** — model-agnostic, safe by default, and auditable.
 
-Unlike "markdown memory" systems that bloat over time and burn tokens on every run, cellar-door uses **retrieval + compaction**:
-
-- Keep a tiny always-loaded bootstrap
-- Store everything else as atomic "memory cards"
-- Retrieve only what's relevant under a strict token budget
-- Compact session logs into summaries automatically
-
-> Default posture: **no public ports**, **default-deny** for dangerous actions, and **explainable policies**.
+cellar-door is designed for power users and teams who want automation and memory without opaque behavior or runaway context. It is **retrieve-first**, **default-deny**, and **explicit about side effects**.
 
 ---
 
-## Features
+## Why cellar-door
+
+Most agent tools either:
+- load too much context, burning tokens and slowing down over time
+- hide or bypass dangerous actions
+- lock you into a specific model vendor
+
+cellar-door fixes this by enforcing **retrieval over loading**, **policy-gated tool execution**, and **provider-agnostic model access**.
+
+---
+
+## Core Principles
+
+- **Retrieve, don’t load.** Memory is retrieved under a strict token budget.
+- **Default-deny dangerous actions.** Side effects require explicit approval.
+- **Make power visible and auditable.** Every tool call is logged with intent and outcome.
+- **Model-agnostic by design.** Bring your own model (cloud or local).
+- **No silent escalation.** Permissions are explicit and time-bounded.
+
+---
+
+## Features (Current + Planned)
 
 ### Local-first by default
-
-Runs entirely on your machine. State lives in `~/.cellar-door/`. Network surfaces are optional and treated as plugins/transports.
+- Runs entirely on your machine.
+- State lives in `~/.cellar-door/`.
+- No public listeners unless explicitly enabled.
 
 ### Token-efficient memory
-
-- Append-only session logs for audit and debug
-- Automatic compaction into `hot.md` (hard-capped), atomic memory cards (facts/lessons/decisions), and an indexed store (JSON or SQLite)
-- Strict token budgets so memory never "runs away"
+- Append-only session logs for audit and debug.
+- Automatic compaction into `hot` memory and atomic memory cards.
+- Retrieval ranks by relevance, recency, importance, and scope.
+- Strict token budgets per memory layer.
 
 ### Safe tool execution
+- Tools are schema-defined with a declared **side-effect class**.
+- Policies allow/deny by tool, path, or network domain.
+- Interactive approvals for high-risk actions.
 
-- Tools are schema-defined (JSON Schema) with a declared **side-effect class**
-- Policies can allow/deny per tool, filesystem path scope, network domain allowlist, or exec enablement
-- Interactive approvals for high-risk actions
-
-### Team-ready
-
-- Namespaced memory scopes: `org/`, `team/`, `project/`, `user/`
-- Audit logs for tool calls, approvals, and denials
-- Shared config/memory via local shared directories for small teams
+### Team-ready controls
+- Namespaced memory scopes (`org/`, `team/`, `project/`, `user/`).
+- Audit logs for tool calls and approvals.
+- Default-deny posture suitable for shared environments.
 
 ---
 
-## Install
+## Installation
 
-### Run without installing (recommended to start)
-
+### Run without installing
 ```bash
 npx cellar-door init
 npx cellar-door doctor
 ```
 
 ### Install globally
-
 ```bash
 npm install -g cellar-door
 cellar-door --help
@@ -59,89 +70,39 @@ cellar-door --help
 
 ## Quickstart
 
-**Initialize:**
-
+Initialize config:
 ```bash
 cellar-door init
 ```
 
-**Run a task:**
-
+Check environment and config:
 ```bash
-cellar-door run "Summarize the repo and tell me where env vars are configured"
-```
-
-**Search memory:**
-
-```bash
-cellar-door memory search "ssh key"
-```
-
-**Compact memory (manual trigger):**
-
-```bash
-cellar-door memory compact
+cellar-door doctor
 ```
 
 ---
 
-## CLI Commands
+## CLI Commands (Phase 1)
 
 | Command | Description |
-|---------|-------------|
-| `cellar-door init` | Create config + local storage directory and run first-time setup |
-| `cellar-door run "<task>"` | Execute a task using retrieval + tools + policy gating |
-| `cellar-door memory add\|search\|compact\|gc` | Manage memory cards, retrieve knowledge, compact logs, garbage collect |
-| `cellar-door policy check\|explain\|approve` | Inspect/test policies and approve gated actions |
-| `cellar-door tool list\|describe` | List available tools and show schemas + side-effect classes |
-| `cellar-door plugin add\|remove\|list` | Install and manage plugins |
+| --- | --- |
+| `cellar-door init` | Initialize config and local data directory |
+| `cellar-door doctor` | Verify environment and config |
+| `cellar-door version` | Print installed version |
+
+> Additional commands (`run`, `memory`, `policy`, `tool`, `plugin`) are planned for Phase 2+.
 
 ---
 
-## Architecture
+## Memory Model (Design)
 
-### Components
+### Layers
+- **Bootstrap**: always loaded, tiny, identity and policies.
+- **Hot**: always available, hard-capped summary of recent context.
+- **Warm**: retrieved on demand under strict budget.
+- **Cold**: audit-only, never injected.
 
-| Component | Role |
-|-----------|------|
-| **CLI** | User-facing interface; renders approvals interactively; supports `--json` for scripting |
-| **Core Runtime** | Orchestrates the agent loop: parse task → retrieve memory → plan + invoke tools → log traces + outcomes |
-| **Memory Store** | Append-only session logs, compaction pipeline, memory cards + index, retrieval ranking and token budgeting |
-| **Tool Registry + Execution** | Schema-defined tools with side-effect classes (`read_only`, `writes_files`, `network`, `exec`, `money`, `admin`); enforced through the policy engine |
-| **Policy Engine** | Default-deny on risky classes; capability checks for file path scopes, domain allowlists, tool permissions; explainable deny reasons |
-| **Transports / Surfaces** *(optional)* | Telegram, Slack, Web UI, etc. — implemented as plugins; never forces the core to bind publicly |
-
-### Request flow
-
-```
-User → CLI → Core Runtime
-              ├─→ Memory Retrieval (budgeted)
-              ├─→ Policy Check
-              ├─→ Tool Calls (schema validated)
-              ├─→ Results
-              ├─→ Audit + Session Log
-              └─→ Compaction (when needed)
-```
-
----
-
-## Memory & Context Model
-
-### Why not "load markdown files into the prompt"?
-
-Because memory grows unbounded and becomes a recurring token tax.
-
-### cellar-door's approach
-
-| Layer | Description |
-|-------|-------------|
-| **Bootstrap** (always loaded, tiny) | Identity + policies + project brief. Capped by config (recommended 1–3k tokens). |
-| **Hot memory** (always available, hard-capped) | Rolling summary of the most important, recent facts and decisions. |
-| **Warm memory** (retrieved on demand) | Atomic "memory cards" with tags and metadata. Retrieved by relevance under a strict budget — never loaded wholesale. |
-| **Cold memory** (audit/debug only) | Raw session logs, archived segments. Never injected automatically. |
-
-### Storage layout
-
+### Storage layout (planned)
 ```
 ~/.cellar-door/
 ├── bootstrap/
@@ -153,51 +114,55 @@ Because memory grows unbounded and becomes a recurring token tax.
 │   ├── cards/
 │   │   ├── mem_2026_02_02_001.md
 │   │   └── mem_2026_02_02_002.md
-│   └── index.json              # or index.sqlite
+│   └── index.json
 ├── sessions/
-│   └── 2026-02-02.md           # append-only log (raw)
+│   └── 2026-02-02.md
 ├── audit/
-│   └── audit.log               # tool calls + approvals + denials
+│   └── audit.log
 └── config.json
 ```
 
-### Memory card format
-
+### Memory card format (planned)
 ```yaml
 ---
 id: mem_2026_02_02_001
-type: lesson              # fact | lesson | decision | snippet
-tags: [ssh, security]
-scope: project            # org | team | project | user
-importance: 0.7           # 0..1
+type: lesson
+scope: project
+importance: 0.7
 created_at: 2026-02-02
+tags: [ssh, security]
 ---
 Keep private SSH keys local. Put public keys in authorized_keys on the remote.
 ```
 
-### Retrieval & token budgeting
-
-At runtime, cellar-door selects the top-K memory cards by tag overlap, recency decay, importance, and scope match (`project > team > org` unless overridden). It then enforces a token budget:
-
-- **Bootstrap:** fixed cap
-- **Retrieved memories:** fixed cap
-- **Remaining context:** the conversation + task
-
 ---
 
-## Security Defaults
+## Architecture (Planned)
 
-- **No public ports** by default
-- **Default-deny** for `exec`, network to non-allowlisted domains, and writes outside scoped paths
-- **Explainable policies:** denials include "why" and which policy blocked the action
-- **Secrets:** env vars and config can be redacted from logs; "do not store" markers supported (planned)
+### Components
+- **CLI**: user interface with `--json` output for scripting.
+- **Core Runtime**: orchestrates task execution and retrieval.
+- **Memory Store**: cards, summaries, and audit logs.
+- **Tool Registry + Execution**: schema-validated tools with side-effect classes.
+- **Policy Engine**: default-deny gating with explainable decisions.
+- **Optional Surfaces**: plugins (Slack, Web UI, etc.) with no required listeners.
+
+### Request flow
+```
+User → CLI → Runtime
+              ├─→ Memory Retrieval (budgeted)
+              ├─→ Policy Check
+              ├─→ Tool Calls (schema validated)
+              ├─→ Results
+              ├─→ Audit + Session Log
+              └─→ Compaction (when needed)
+```
 
 ---
 
 ## Configuration
 
-`~/.cellar-door/config.json` example:
-
+Example `~/.cellar-door/config.json` (future schema may evolve):
 ```json
 {
   "workspaceRoot": "~/dev/my-project",
@@ -216,52 +181,25 @@ At runtime, cellar-door selects the top-K memory cards by tag overlap, recency d
 
 ---
 
-## Plugins
-
-Plugins can add:
-
-- **Tools** — with schemas + side-effect classes
-- **Surfaces / Transports** — Telegram, Slack, etc.
-- **Memory providers** — SQLite, embeddings, etc.
-
-Plugin API is versioned. Breaking changes require a major version bump.
-
----
-
 ## Development
 
 ```bash
 npm install
+npm run lint
+npm run typecheck
+npm run test
 npm run build
-npm link
-cellar-door --help
-```
-
-Run tests:
-
-```bash
-npm test
+npm run smoke
 ```
 
 ---
 
-## Roadmap
+## Roadmap (High level)
 
-- [ ] Signed plugins + trusted publisher keys
-- [ ] Optional embeddings-based recall (pluggable)
-- [ ] Improved sandboxing (worker isolation)
-- [ ] Team sync enhancements + conflict resolution
-- [ ] Web UI surface (optional)
-
----
-
-## Contributing
-
-PRs welcome. Please:
-
-- Open an issue for new features
-- Include tests for retrieval/compaction changes
-- Keep defaults safe — no widening permissions silently
+- Model-agnostic provider interface + runtime spine
+- Retrieval-based memory store with compaction
+- Policy engine and tool registry
+- Optional plugin system and surfaces
 
 ---
 
