@@ -28,7 +28,8 @@ program
   .option("-f, --force", "Recreate config and re-run setup prompts", false)
   .action(async (options: { force?: boolean }) => {
     const logger = createLogger({ json: program.opts().json as boolean });
-    await runInit(logger, { force: options.force });
+    const initOptions = options.force === undefined ? undefined : { force: options.force };
+    await runInit(logger, initOptions);
   });
 
 program
