@@ -1,0 +1,11 @@
+{
+  "name": "celler-door",
+  "version": "0.0.0",
+  "description": "Local-first automation gateway with token-efficient memory",
+  "bin": {
+    "celler-door": "dist/cli.js"
+  },
+  "license": "MIT",
+  "private": false
+}
+
