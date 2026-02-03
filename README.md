@@ -93,6 +93,7 @@ cellar-door doctor
 | `cellar-door version` | Print installed version |
 | `cellar-door run "<task>"` | Execute a task using retrieval and policy gating |
 | `cellar-door memory add|search|compact|gc` | Manage memory cards, retrieval, and compaction |
+| `cellar-door tool list|describe` | Inspect built-in tools and schemas |
 
 > Additional commands (`policy`, `tool`, `plugin`) are planned for Phase 4+.
 

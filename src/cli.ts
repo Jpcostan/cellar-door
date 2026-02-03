@@ -8,6 +8,8 @@ import { buildModelProvider } from "./model/factory.js";
 import { InMemoryToolRegistry } from "./tools/registry.js";
 import { runTask } from "./runtime/run.js";
 import { runMemoryAdd, runMemoryCompact, runMemoryGc, runMemorySearch } from "./commands/memory.js";
+import { BUILTIN_TOOLS } from "./tools/builtins.js";
+import { runToolDescribe, runToolList } from "./commands/tool.js";
 
 const program = new Command();
 
@@ -54,12 +56,13 @@ program
       return;
     }
     const provider = buildModelProvider(config.modelProvider);
-    const registry = new InMemoryToolRegistry([]);
+    const registry = new InMemoryToolRegistry(BUILTIN_TOOLS);
     const runOptions = {
       modelProvider: provider,
       toolRegistry: registry,
       logger,
       ...(config.tokenBudgets ? { tokenBudgets: config.tokenBudgets } : {}),
+      config,
     };
     const outcome = await runTask(task, runOptions);
     if (program.opts().json) {
@@ -117,6 +120,27 @@ memory
   .action(async () => {
     const logger = createLogger({ json: program.opts().json as boolean });
     await runMemoryGc(logger);
+  });
+
+const tool = program.command("tool").description("Inspect available tools");
+
+tool
+  .command("list")
+  .description("List tools")
+  .action(async () => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    const registry = new InMemoryToolRegistry(BUILTIN_TOOLS);
+    await runToolList(registry, logger);
+  });
+
+tool
+  .command("describe")
+  .description("Describe a tool")
+  .argument("<name>", "Tool name")
+  .action(async (name: string) => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    const registry = new InMemoryToolRegistry(BUILTIN_TOOLS);
+    await runToolDescribe(name, registry, logger);
   });
 
 program.parseAsync(process.argv).catch((error) => {

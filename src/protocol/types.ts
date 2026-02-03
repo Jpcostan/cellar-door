@@ -3,6 +3,8 @@ export type SideEffectClass =
   | "writes_files"
   | "network"
   | "exec"
+  | "ui_control"
+  | "screen_capture"
   | "money"
   | "admin";
 

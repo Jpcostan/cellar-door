@@ -6,6 +6,11 @@ import { defaultPolicyForToolCall, denyToolCall } from "./policy.js";
 import { ToolRegistry } from "../tools/registry.js";
 import type { Logger } from "../logging/logger.js";
 import { appendSessionLog } from "../memory/sessions.js";
+import type { ApprovalProvider } from "../tools/approvals.js";
+import { CliApprovalProvider } from "../tools/approvals.js";
+import { executeToolCall, ToolContext } from "../tools/executor.js";
+import { BUILTIN_HANDLERS } from "../tools/builtins.js";
+import type { Config } from "../config/schema.js";
 
 export interface RunOptions {
   modelProvider: ModelProvider;
@@ -13,6 +18,8 @@ export interface RunOptions {
   logger: Logger;
   tokenBudgets?: RetrievalBudget;
   scope?: "org" | "team" | "project" | "user";
+  approvalProvider?: ApprovalProvider;
+  config?: Config | null;
 }
 
 export interface RunOutcome {
@@ -86,30 +93,21 @@ export async function runTask(task: string, options: RunOptions): Promise<RunOut
   trace.toolCalls = parsed.toolCalls;
 
   const toolResults: ToolResult[] = [];
+  const approvalProvider = options.approvalProvider ?? new CliApprovalProvider();
+  const context: ToolContext = {
+    config: options.config ?? null,
+    registry: options.toolRegistry,
+    approve: approvalProvider,
+    handlers: BUILTIN_HANDLERS,
+  };
+
   for (const call of parsed.toolCalls) {
     const decision = defaultPolicyForToolCall(call);
     if (!decision.allowed) {
       toolResults.push(denyToolCall(call, decision.reason));
       continue;
     }
-
-    const tool = options.toolRegistry.get(call.name);
-    if (!tool) {
-      toolResults.push(denyToolCall(call, "Unknown tool."));
-      continue;
-    }
-
-    if (!options.toolRegistry.validateInput(call.name, call.arguments)) {
-      toolResults.push(denyToolCall(call, "Tool input validation failed."));
-      continue;
-    }
-
-    toolResults.push({
-      id: call.id,
-      name: call.name,
-      status: "error",
-      error: "Tool execution not implemented.",
-    });
+    toolResults.push(await executeToolCall(call, context));
   }
 
   trace.toolResults = toolResults;
