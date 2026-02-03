@@ -14,6 +14,5 @@ labels: [bug]
 
 ## Environment
 - OS:
-- Node.js:
+- Node.js (>=22):
 - cellar-door version:
-

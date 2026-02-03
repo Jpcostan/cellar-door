@@ -1,6 +1,6 @@
 {
   "name": "cellar-door",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Local-first automation gateway with token-efficient memory",
   "license": "MIT",
   "private": false,
@@ -29,7 +29,7 @@
     "security:check": "node scripts/validate_security.mjs"
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   },
   "dependencies": {
     "ajv": "^8.17.1",

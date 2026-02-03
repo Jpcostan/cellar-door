@@ -24,6 +24,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - `cellar-door init` now prompts to reconfigure when a config already exists
 
+## [0.0.6] - 2026-02-03
+
+### Changed
+- Require Node.js >= 22 in engines and CI
+
 ## [0.0.3] - 2026-02-03
 
 ### Fixed
