@@ -12,6 +12,7 @@ import { BUILTIN_TOOLS } from "./tools/builtins.js";
 import { runToolDescribe, runToolList } from "./commands/tool.js";
 import { runPolicyCheck, runPolicyExplain, runPolicyApprove, runPolicyCheckDomain, runPolicyCheckPath, runPolicyCheckUi, runPolicyCheckModel } from "./commands/policy.js";
 import { runAuditTail } from "./commands/audit.js";
+import { runPluginAdd, runPluginList, runPluginRemove, runPluginTemplate, runPluginVerify } from "./commands/plugin.js";
 
 const program = new Command();
 
@@ -231,6 +232,53 @@ audit
   .action(async (options: { limit: number }) => {
     const logger = createLogger({ json: program.opts().json as boolean });
     await runAuditTail(options.limit, logger);
+  });
+
+const plugin = program.command("plugin").description("Manage plugins");
+
+plugin
+  .command("add")
+  .description("Add a plugin from a local path")
+  .argument("<path>", "Path to plugin")
+  .action(async (value: string) => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    await runPluginAdd(value, logger);
+  });
+
+plugin
+  .command("remove")
+  .description("Remove a plugin by name")
+  .argument("<name>", "Plugin name")
+  .action(async (value: string) => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    await runPluginRemove(value, logger);
+  });
+
+plugin
+  .command("list")
+  .description("List installed plugins")
+  .action(async () => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    await runPluginList(logger);
+  });
+
+plugin
+  .command("verify")
+  .description("Verify a plugin manifest and entry file")
+  .argument("<path>", "Path to plugin")
+  .action(async (value: string) => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    await runPluginVerify(value, logger);
+  });
+
+plugin
+  .command("template")
+  .description("Create a plugin template")
+  .argument("<path>", "Target directory")
+  .argument("<name>", "Plugin name")
+  .action(async (dir: string, name: string) => {
+    const logger = createLogger({ json: program.opts().json as boolean });
+    await runPluginTemplate(dir, name, logger);
   });
 
 program.parseAsync(process.argv).catch((error) => {
