@@ -28,13 +28,22 @@ out/
 
 # =========================
 # Local runtime data
-# (celler-door stores user data outside the repo,
+# (cellar-door stores user data outside the repo,
 # but this protects accidental local test dirs)
 # =========================
 .cellerdoor/
+.celler-door/
+.cellar-door/
 cellerdoor-data/
+cellar-door-data/
 tmp/
 temp/
+
+# =========================
+# Internal design / planning
+# (intentionally not committed)
+# =========================
+cellar-door-phases.md
 
 # =========================
 # Logs

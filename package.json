@@ -2,9 +2,33 @@
   "name": "cellar-door",
   "version": "0.0.1",
   "description": "Local-first automation gateway with token-efficient memory",
+  "license": "MIT",
+  "private": false,
+  "type": "module",
   "bin": {
     "cellar-door": "dist/cli.js"
   },
-  "license": "MIT",
-  "private": false
+  "scripts": {
+    "build": "tsup",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run",
+    "smoke": "node dist/cli.js version"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.10",
+    "@typescript-eslint/eslint-plugin": "^8.24.1",
+    "@typescript-eslint/parser": "^8.24.1",
+    "eslint": "^9.20.1",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.3",
+    "vitest": "^4.0.18"
+  }
 }
