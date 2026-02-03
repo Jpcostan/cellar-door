@@ -65,6 +65,11 @@ cellar-door is local-first. Configuration and data live in `~/.cellar-door/`.
 cellar-door init
 ```
 
+If you already have a config and want to re-run setup prompts:
+```bash
+cellar-door init --force
+```
+
 2) Configure a model provider in `~/.cellar-door/config.json`:
 
 **OpenAI-compatible HTTP**

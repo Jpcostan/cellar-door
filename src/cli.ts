@@ -25,9 +25,10 @@ program
 program
   .command("init")
   .description("Initialize cellar-door configuration")
-  .action(async () => {
+  .option("-f, --force", "Recreate config and re-run setup prompts", false)
+  .action(async (options: { force?: boolean }) => {
     const logger = createLogger({ json: program.opts().json as boolean });
-    await runInit(logger);
+    await runInit(logger, { force: options.force });
   });
 
 program

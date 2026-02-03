@@ -51,10 +51,10 @@ async function configureModelProvider(logger: Logger): Promise<ModelProviderConf
   };
 }
 
-export async function runInit(logger: Logger): Promise<void> {
+export async function runInit(logger: Logger, options?: { force?: boolean }): Promise<void> {
   await ensureHomeDir();
   const existing = await loadConfig();
-  if (existing) {
+  if (existing && !options?.force) {
     logger.info("Config already exists.", { path: getConfigPath() });
     return;
   }

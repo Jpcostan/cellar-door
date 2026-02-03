@@ -16,3 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Removed accidental self-dependency in `package.json` that could cause packaging/install issues
 - Clarified local install vs `npx`/global usage in README
+
+## [0.0.4] - 2026-02-03
+
+### Added
+- `cellar-door init --force` to re-run setup prompts when a config already exists

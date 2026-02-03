@@ -1,6 +1,6 @@
 {
   "name": "cellar-door",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Local-first automation gateway with token-efficient memory",
   "license": "MIT",
   "private": false,
