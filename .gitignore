@@ -25,6 +25,7 @@ out/
 .env
 .env.*
 !.env.example
+.npmrc
 
 # =========================
 # Local runtime data
@@ -90,4 +91,3 @@ Thumbs.db
 # =========================
 .cache/
 .eslintcache
-

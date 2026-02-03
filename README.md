@@ -194,6 +194,14 @@ npm run build
 npm run smoke
 ```
 
+## Publishing (npm)
+
+This repo is configured for a public npm package with a `files` whitelist. Publishing runs tests and build automatically:
+
+```bash
+npm publish
+```
+
 ---
 
 ## Roadmap (High level)

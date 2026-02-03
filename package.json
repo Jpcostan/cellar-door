@@ -8,12 +8,22 @@
   "bin": {
     "cellar-door": "dist/cli.js"
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "package.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
     "test": "vitest run",
-    "smoke": "node dist/cli.js version"
+    "smoke": "node dist/cli.js version",
+    "prepublishOnly": "npm run test && npm run build"
   },
   "engines": {
     "node": ">=20"
