@@ -25,6 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Include provider error details in HTTP model errors to surface 400/401/429 reasons
 
+## [0.0.9] - 2026-02-04
+
+### Changed
+- Include tool catalog and workspace context in model prompts
+- Execute tool calls and feed results back to the model for a final response
+
 ## [0.0.5] - 2026-02-03
 
 ### Added

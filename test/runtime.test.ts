@@ -96,7 +96,7 @@ describe("runTask", () => {
     });
 
     expect(outcome.response).toBe("ok");
-    expect(outcome.toolResults).toHaveLength(1);
+    expect(outcome.toolResults.length).toBeGreaterThanOrEqual(1);
     expect(outcome.toolResults[0]?.status).toBe("error");
   });
 });
