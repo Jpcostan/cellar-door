@@ -82,7 +82,29 @@ export class HttpModelProvider implements ModelProvider {
       });
 
       if (!response.ok) {
-        throw new Error(`Model HTTP error: ${response.status}`);
+        let detail = "";
+        try {
+          const raw = await response.text();
+          if (raw) {
+            try {
+              const parsed = JSON.parse(raw) as { error?: { message?: string; type?: string; code?: string } };
+              if (parsed?.error?.message) {
+                const parts = [parsed.error.message];
+                if (parsed.error.type) parts.push(`type=${parsed.error.type}`);
+                if (parsed.error.code) parts.push(`code=${parsed.error.code}`);
+                detail = parts.join(" ");
+              } else {
+                detail = raw;
+              }
+            } catch {
+              detail = raw;
+            }
+          }
+        } catch {
+          detail = "";
+        }
+        const suffix = detail ? `: ${detail}` : "";
+        throw new Error(`Model HTTP error: ${response.status}${suffix}`);
       }
 
       const payload = (await response.json()) as unknown;

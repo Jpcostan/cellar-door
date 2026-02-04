@@ -20,6 +20,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Doctor validates Node.js >= 22 and missing env vars for model headers
 - Runtime fails fast with a clear error when required env vars are missing
 
+## [0.0.8] - 2026-02-04
+
+### Changed
+- Include provider error details in HTTP model errors to surface 400/401/429 reasons
+
 ## [0.0.5] - 2026-02-03
 
 ### Added
