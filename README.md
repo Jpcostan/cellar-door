@@ -31,6 +31,9 @@ cellar-door fixes this by enforcing **retrieval over loading**, **policy-gated t
 
 ## Installation
 
+### Requirements
+- Node.js >= 22
+
 ### Run without installing
 ```bash
 npx cellar-door setup
@@ -151,6 +154,29 @@ cellar-door run "Summarize the repo"
 
 ---
 
+## Use Cases
+
+cellar-door is intentionally conservative and works best with clear, targeted tasks. Examples:
+- Review a specific file: "Read `src/auth.ts` and flag risky patterns."
+- Refactor planning: "Open `src/routes.ts` and suggest how to split it into modules."
+- Config sanity checks: "Read `package.json` and review scripts/dependencies for issues."
+- Change log drafting: "Compare `git log` to `CHANGELOG.md` and propose new entries."
+- Dependency audits: "List direct deps from `package.json` and flag unused ones."
+- Test gap spotting: "Given `src/feature.ts`, propose missing tests."
+- Release prep: "From `package.json` + `CHANGELOG.md`, build a release checklist."
+- Repo state summary: "Run `git status` and summarize current state."
+
+---
+
+## Usage Tips
+
+- cellar-door runs in the **current working directory** unless `workspaceRoot` is set.
+- For local installs, use `npm exec -- cellar-door ...` or `./node_modules/.bin/cellar-door ...`.
+- The model only sees what it retrieves or reads via tools. Be explicit about files when needed.
+- If you want a repo summary, hint it to read `README.md` and `package.json`.
+
+---
+
 ## CLI Commands
 
 | Command | Description |
@@ -221,6 +247,7 @@ npm run typecheck
 npm run test
 npm run build
 npm run smoke
+npm run release:check
 ```
 
 ## Benchmarks
@@ -245,6 +272,15 @@ This repo is configured for a public npm package with a `files` whitelist. Publi
 ```bash
 npm publish
 ```
+
+---
+
+## Troubleshooting
+
+- **`EBADENGINE`**: You need Node.js >= 22.
+- **`Model HTTP error: 401`**: Missing/invalid API key in `~/.cellar-door/.env`.
+- **`Model HTTP error: 429`**: Rate limit or model access not available for your account.
+- **`Model HTTP error: 400`**: Often a model not supported by the provider endpoint.
 
 ---
 
