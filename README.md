@@ -237,6 +237,25 @@ User → CLI → Runtime
 
 ## Memory Model (Design)
 
+### How memory is handled
+- **Bootstrap**: tiny, always loaded context for each run.
+- **Hot**: a compact summary updated by compaction; hard-capped in size.
+- **Warm**: retrieved on demand based on the task; never auto-loaded.
+- **Cold**: audit-only history; never injected into prompts.
+
+Memory is **retrieved per run** under a strict token budget. There is **no implicit conversational state** between runs unless you explicitly add memory cards or compact.
+
+### Persistence and retention
+- Memory lives on disk in `~/.cellar-door/` and persists across runs until you delete it.
+- Session logs are append-only; they are **not** automatically used as context.
+- You control retention by deleting cards, running compaction, or pruning the index.
+
+### Why this approach helps
+- **Predictable cost**: bounded retrieval avoids token bloat over time.
+- **Clear provenance**: only retrieved cards affect outputs, reducing hallucinated context.
+- **Safer by default**: nothing is silently loaded from prior sessions.
+- **Auditable**: memory operations are visible and inspectable on disk.
+
 ### Storage layout
 ```
 ~/.cellar-door/
