@@ -13,6 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New setup wizard (`cellar-door setup`) with Quickstart + Advanced modes
 - Optional `.env` storage for model credentials
 
+### Changed
+- Setup wizard now requires and stores the OpenAI API key during Quickstart
+- Setup wizard fetches available models and forces selection via an interactive picker
+- Model list fetch retries on transient errors and caches results locally
+- Doctor validates Node.js >= 22 and missing env vars for model headers
+- Runtime fails fast with a clear error when required env vars are missing
+
 ## [0.0.5] - 2026-02-03
 
 ### Added

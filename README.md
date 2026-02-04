@@ -73,6 +73,8 @@ cellar-door setup --force
 2) Configure a model provider in `~/.cellar-door/config.json`:
 
 Secrets are stored in `~/.cellar-door/.env` (recommended) and referenced by `config.json`.
+The setup wizard fetches available models from your provider and lets you select one, so you don't need to type model IDs manually.
+The base URL is the API root (e.g., `https://api.openai.com/v1`), and the wizard can save secrets so you don't need to export env vars in your shell.
 
 **OpenAI-compatible HTTP**
 ```json

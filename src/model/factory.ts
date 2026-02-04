@@ -3,6 +3,7 @@ import { HttpModelProvider } from "./http-provider.js";
 import { OllamaModelProvider } from "./ollama-provider.js";
 import { LmStudioModelProvider } from "./lmstudio-provider.js";
 import { ModelProviderConfig } from "../config/schema.js";
+import { findMissingEnvVarsForProvider } from "./env.js";
 
 function expandEnv(value: string): string {
   const withBraces = value.replace(/\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g, (match, name: string) => {
@@ -19,6 +20,13 @@ function expandHeaders(headers: Record<string, string>): Record<string, string> 
 }
 
 export function buildModelProvider(config: ModelProviderConfig): ModelProvider {
+  const missingEnv = findMissingEnvVarsForProvider(config);
+  if (missingEnv.length > 0) {
+    throw new Error(
+      `Missing required env var(s) for model provider headers: ${missingEnv.join(", ")}. ` +
+        "Run `cellar-door setup --force` or add them to ~/.cellar-door/.env."
+    );
+  }
   if (config.kind === "http") {
     const options = {
       baseUrl: config.baseUrl,

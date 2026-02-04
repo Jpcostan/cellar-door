@@ -71,7 +71,15 @@ program
       process.exitCode = 1;
       return;
     }
-    const provider = buildModelProvider(config.modelProvider);
+    let provider;
+    try {
+      provider = buildModelProvider(config.modelProvider);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to initialize model provider.";
+      logger.error(message);
+      process.exitCode = 1;
+      return;
+    }
     const registry = new InMemoryToolRegistry(BUILTIN_TOOLS);
     const runOptions = {
       modelProvider: provider,
