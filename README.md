@@ -168,6 +168,20 @@ cellar-door is intentionally conservative and works best with clear, targeted ta
 
 ---
 
+## Why Not Just Use Codex or Claude Code
+
+cellar-door emphasizes **control, safety, and auditability** over convenience:
+- **Default-deny by design**: dangerous actions and side effects require explicit approval.
+- **Auditable actions**: every tool call is logged with intent and outcome.
+- **Retrieval-first**: avoids auto-loading large context and keeps runs fast and predictable.
+- **Scoped execution**: file access stays within the workspace root by default.
+- **Model-agnostic**: swap providers without changing core logic.
+- **Policy surface**: explicit allow/deny for tools, domains, UI, and side effects.
+
+The tradeoff is less “magical” behavior. You may need to be more explicit about which files to read.
+
+---
+
 ## Usage Tips
 
 - cellar-door runs in the **current working directory** unless `workspaceRoot` is set.
