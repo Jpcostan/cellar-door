@@ -89,16 +89,51 @@ function resolveBudgets(contextWindow: number, override?: RetrievalBudget): Retr
   return { bootstrapMax, hotMax, warmMax };
 }
 
-function extractResponse(content: string): { response: string; toolCalls: ToolCall[] } {
+function parseJsonObject(text: string): { response?: string; toolCalls?: ToolCall[] } | null {
   try {
-    const parsed = JSON.parse(content) as { response?: string; toolCalls?: ToolCall[] };
-    return {
-      response: typeof parsed.response === "string" ? parsed.response : content,
-      toolCalls: Array.isArray(parsed.toolCalls) ? parsed.toolCalls : [],
-    };
+    const parsed = JSON.parse(text) as { response?: string; toolCalls?: ToolCall[] };
+    if (parsed && typeof parsed === "object") {
+      return parsed;
+    }
   } catch {
-    return { response: content, toolCalls: [] };
+    return null;
   }
+  return null;
+}
+
+function extractResponse(content: string): { response: string; toolCalls: ToolCall[] } {
+  const direct = parseJsonObject(content);
+  if (direct) {
+    return {
+      response: typeof direct.response === "string" ? direct.response : "",
+      toolCalls: Array.isArray(direct.toolCalls) ? direct.toolCalls : [],
+    };
+  }
+
+  const lines = content.split("\n").map((line) => line.trim()).filter(Boolean);
+  for (let i = lines.length - 1; i >= 0; i -= 1) {
+    const candidate = parseJsonObject(lines[i] ?? "");
+    if (candidate) {
+      return {
+        response: typeof candidate.response === "string" ? candidate.response : "",
+        toolCalls: Array.isArray(candidate.toolCalls) ? candidate.toolCalls : [],
+      };
+    }
+  }
+
+  const lastOpen = content.lastIndexOf("{");
+  if (lastOpen >= 0) {
+    const tail = content.slice(lastOpen);
+    const tailParsed = parseJsonObject(tail);
+    if (tailParsed) {
+      return {
+        response: typeof tailParsed.response === "string" ? tailParsed.response : "",
+        toolCalls: Array.isArray(tailParsed.toolCalls) ? tailParsed.toolCalls : [],
+      };
+    }
+  }
+
+  return { response: content, toolCalls: [] };
 }
 
 export async function runTask(task: string, options: RunOptions): Promise<RunOutcome> {

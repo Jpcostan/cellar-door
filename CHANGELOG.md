@@ -36,6 +36,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fix prompt memory reference in runtime builder
 
+## [0.0.11] - 2026-02-04
+
+### Fixed
+- Robust parsing of model JSON responses to avoid leaking raw tool-call JSON
+
 ## [0.0.5] - 2026-02-03
 
 ### Added
