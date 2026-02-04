@@ -50,7 +50,7 @@ function buildPrompt(params: {
   workspaceRoot: string;
   toolResults?: ToolResult[];
 }): string {
-  const memorySection = memory.length > 0 ? memory.join("\n") : "(none)";
+  const memorySection = params.memory.length > 0 ? params.memory.join("\n") : "(none)";
   const toolResults = params.toolResults ?? [];
   const toolResultsSection = toolResults.length > 0 ? JSON.stringify(toolResults, null, 2) : "(none)";
   return `You are cellar-door.
