@@ -74,6 +74,7 @@ Instructions:
 - Tool calls must be JSON objects in toolCalls with shape: {"id":"call-1","name":"tool.name","arguments":{...}}.
 - If you use tools, set "response" to an empty string and include toolCalls.
 - If you have enough info, return a concise "response" and set toolCalls to [].
+- Do not claim to have run tools unless tool results are present.
 
 Respond with JSON: {"response": "...", "toolCalls": []}.`;
 }
@@ -136,6 +137,14 @@ function extractResponse(content: string): { response: string; toolCalls: ToolCa
   return { response: content, toolCalls: [] };
 }
 
+function shouldPreflightRepoSummary(task: string): boolean {
+  return /summarize the repo/i.test(task);
+}
+
+function createToolCall(id: string, name: string, args: Record<string, unknown>): ToolCall {
+  return { id, name, arguments: args };
+}
+
 export async function runTask(task: string, options: RunOptions): Promise<RunOutcome> {
   const traceId = createTraceId();
   const startedAt = new Date().toISOString();
@@ -178,6 +187,62 @@ export async function runTask(task: string, options: RunOptions): Promise<RunOut
     handlers: BUILTIN_HANDLERS,
   };
 
+  if (shouldPreflightRepoSummary(task)) {
+    const preflightCalls: ToolCall[] = [
+      createToolCall("pref-1", "exec.run", { command: "ls", args: ["-la"], cwd: workspaceRoot }),
+      createToolCall("pref-2", "git.status", {}),
+      createToolCall("pref-3", "git.log", {}),
+      createToolCall("pref-4", "exec.run", {
+        command: "find",
+        args: [
+          ".",
+          "-maxdepth",
+          "3",
+          "-type",
+          "f",
+          "(",
+          "-name",
+          "README*",
+          "-o",
+          "-name",
+          "package.json",
+          "-o",
+          "-name",
+          "pyproject.toml",
+          "-o",
+          "-name",
+          "Cargo.toml",
+          "-o",
+          "-name",
+          "go.mod",
+          ")",
+        ],
+        cwd: workspaceRoot,
+      }),
+    ];
+
+    for (const call of preflightCalls) {
+      if (!options.toolRegistry.get(call.name)) {
+        continue;
+      }
+      toolCalls.push(call);
+      const decision = defaultPolicyForToolCall(call);
+      if (!decision.allowed) {
+        toolResults.push(denyToolCall(call, decision.reason));
+        continue;
+      }
+      const result = await executeToolCall(call, context);
+      toolResults.push(result);
+      await appendAudit({
+        ts: new Date().toISOString(),
+        type: "tool",
+        actor: resolveActor(options.config ?? null, "runtime"),
+        message: `Tool ${call.name} ${result.status}`,
+        data: { id: call.id, name: call.name, status: result.status },
+      });
+    }
+  }
+
   const maxSteps = 2;
   let lastModelDurationMs = 0;
 
@@ -200,7 +265,9 @@ export async function runTask(task: string, options: RunOptions): Promise<RunOut
     return extractResponse(modelResponse.content);
   };
 
-  let parsed = await invokeModel(buildPrompt({ task, memory: memory.items, toolCatalog, workspaceRoot }));
+  let parsed = await invokeModel(
+    buildPrompt({ task, memory: memory.items, toolCatalog, workspaceRoot, toolResults })
+  );
 
   for (let step = 0; step < maxSteps; step += 1) {
     if (parsed.toolCalls.length === 0) {

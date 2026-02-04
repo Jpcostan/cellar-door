@@ -41,6 +41,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Robust parsing of model JSON responses to avoid leaking raw tool-call JSON
 
+## [0.0.12] - 2026-02-04
+
+### Changed
+- Preflight repo summaries by running safe inventory tools and passing results to the model
+
 ## [0.0.5] - 2026-02-03
 
 ### Added
