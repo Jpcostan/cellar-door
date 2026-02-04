@@ -31,6 +31,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Include tool catalog and workspace context in model prompts
 - Execute tool calls and feed results back to the model for a final response
 
+## [0.0.10] - 2026-02-04
+
+### Fixed
+- Fix prompt memory reference in runtime builder
+
 ## [0.0.5] - 2026-02-03
 
 ### Added
